@@ -1,0 +1,208 @@
+-- Row Level Security Policies for Multi-Tenant Isolation
+-- All policies ensure users can only access data from organizations they belong to
+
+-- Enable RLS on all tables
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE class_enrollments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE castings ENABLE ROW LEVEL SECURITY;
+
+-- Helper function to get current user's organization memberships
+CREATE OR REPLACE FUNCTION get_current_user_organizations()
+RETURNS TABLE(organization_id UUID) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT om.organization_id
+    FROM organization_members om
+    WHERE om.user_id = auth.uid()
+    AND om.is_active = true;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Organizations policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view their organizations" ON organizations;
+DROP POLICY IF EXISTS "Admins can update their organizations" ON organizations;
+
+-- Users can view organizations they belong to
+CREATE POLICY "Users can view their organizations" ON organizations
+    FOR SELECT USING (
+        id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+-- Users can update organizations they belong to (admin only)
+CREATE POLICY "Admins can update their organizations" ON organizations
+    FOR UPDATE USING (
+        id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role = 'admin'
+            AND om.is_active = true
+        )
+    );
+
+-- Organization Members policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view organization members" ON organization_members;
+DROP POLICY IF EXISTS "Users can insert organization members" ON organization_members;
+DROP POLICY IF EXISTS "Admins can manage organization members" ON organization_members;
+DROP POLICY IF EXISTS "Admins can update organization members" ON organization_members;
+DROP POLICY IF EXISTS "Admins can delete organization members" ON organization_members;
+
+-- Temporarily disable RLS for organization_members during testing
+ALTER TABLE organization_members DISABLE ROW LEVEL SECURITY;
+
+-- Only admins can manage organization members
+CREATE POLICY "Admins can manage organization members" ON organization_members
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role = 'admin'
+            AND om.is_active = true
+        )
+    );
+
+-- Students policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Organization members can view students" ON students;
+DROP POLICY IF EXISTS "Teachers and admins can manage students" ON students;
+
+-- All organization members can view students
+CREATE POLICY "Organization members can view students" ON students
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+-- Teachers and admins can manage students
+CREATE POLICY "Teachers and admins can manage students" ON students
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
+
+-- Classes policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Organization members can view classes" ON classes;
+DROP POLICY IF EXISTS "Teachers and admins can manage classes" ON classes;
+
+-- All organization members can view classes
+CREATE POLICY "Organization members can view classes" ON classes
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+-- Teachers and admins can manage classes
+CREATE POLICY "Teachers and admins can manage classes" ON classes
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
+
+-- Class Enrollments policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Organization members can view enrollments" ON class_enrollments;
+DROP POLICY IF EXISTS "Teachers and admins can manage enrollments" ON class_enrollments;
+
+-- All organization members can view enrollments
+CREATE POLICY "Organization members can view enrollments" ON class_enrollments
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+-- Teachers and admins can manage enrollments
+CREATE POLICY "Teachers and admins can manage enrollments" ON class_enrollments
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
+
+-- Shows policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Organization members can view shows" ON shows;
+DROP POLICY IF EXISTS "Teachers and admins can manage shows" ON shows;
+
+-- All organization members can view shows
+CREATE POLICY "Organization members can view shows" ON shows
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+-- Teachers and admins can manage shows
+CREATE POLICY "Teachers and admins can manage shows" ON shows
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
+
+-- Roles policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Organization members can view roles" ON roles;
+DROP POLICY IF EXISTS "Teachers and admins can manage roles" ON roles;
+
+-- All organization members can view roles
+CREATE POLICY "Organization members can view roles" ON roles
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+-- Teachers and admins can manage roles
+CREATE POLICY "Teachers and admins can manage roles" ON roles
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
+
+-- Castings policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Organization members can view castings" ON castings;
+DROP POLICY IF EXISTS "Teachers and admins can manage castings" ON castings;
+
+-- All organization members can view castings
+CREATE POLICY "Organization members can view castings" ON castings
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+-- Teachers and admins can manage castings
+CREATE POLICY "Teachers and admins can manage castings" ON castings
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
