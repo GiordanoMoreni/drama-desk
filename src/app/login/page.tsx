@@ -71,9 +71,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Welcome to Drama Desk</CardTitle>
+          <CardTitle>Benvenuto su Drama Desk</CardTitle>
           <CardDescription>
-            Sign in to access your theatre management system
+            Accedi al tuo sistema di gestione teatrale
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -83,7 +83,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Inserisci la tua email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -94,14 +94,14 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Inserisci la tua password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Accesso in corso...' : 'Accedi'}
             </Button>
           </form>
 
@@ -109,7 +109,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-center space-x-2 mb-3">
               <AlertTriangle className="h-4 w-4 text-orange-500" />
               <Badge variant="secondary" className="text-xs">
-                Development Mode
+                Modalità Sviluppo
               </Badge>
             </div>
             <Button
@@ -119,10 +119,10 @@ export default function LoginPage() {
               onClick={handleAdminLogin}
             >
               <Shield className="h-4 w-4 mr-2" />
-              Admin Test Login
+              Accesso Test Admin
             </Button>
             <p className="text-xs text-gray-500 text-center mt-2">
-              For testing purposes only. Bypasses authentication.
+              Solo per scopi di test. Bypassa l'autenticazione.
             </p>
           </div>
         </CardContent>

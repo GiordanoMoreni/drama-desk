@@ -4,10 +4,18 @@ import { getServices } from '@/lib/di';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default async function OrganizationSelectPage() {
+interface OrganizationSelectPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function OrganizationSelectPage({ searchParams }: OrganizationSelectPageProps) {
   console.log('OrganizationSelectPage: Checking user...');
   const user = await getCurrentUser();
+
+  const params = await searchParams;
+  const error = typeof params.error === 'string' ? params.error : null;
 
   if (!user) {
     console.log('OrganizationSelectPage: No user found, redirecting to login');
@@ -28,18 +36,23 @@ export default async function OrganizationSelectPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Welcome to Drama Desk!</CardTitle>
+            <CardTitle>Benvenuto in Drama Desk!</CardTitle>
             <CardDescription>
-              You are not a member of any theatre organizations yet.
-              Create your first organization to get started.
+              Non sei ancora membro di nessuna organizzazione teatrale.
+              Crea la tua prima organizzazione per iniziare.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Create Your Organization</h4>
+            <CardContent>
+              <div className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">Crea la Tua Organizzazione</h4>
                 <p className="text-sm text-blue-700 mb-4">
-                  As the first user, you'll be the administrator of your new theatre organization.
+                  Come primo utente, sarai l'amministratore della tua nuova organizzazione teatrale.
                 </p>
                 <form action={async (formData: FormData) => {
                   'use server';
@@ -91,69 +104,94 @@ export default async function OrganizationSelectPage() {
                     redirect('/dashboard');
                   } catch (error) {
                     console.error('Error creating organization:', error);
-                    // For now, just log the error
-                    // In production, you might want to show an error message
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to create organization';
+                    redirect(`/organizations/select?error=${encodeURIComponent(errorMessage)}`);
                   }
                 }}>
                   <div className="space-y-3">
                     <div>
                       <label htmlFor="orgName" className="block text-sm font-medium text-gray-700 mb-1">
-                        Organization Name
+                        Nome Organizzazione
                       </label>
                       <input
                         type="text"
                         id="orgName"
                         name="orgName"
                         required
-                        placeholder="My Theatre Company"
+                        placeholder="La Mia Compagnia Teatrale"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div>
                       <label htmlFor="orgSlug" className="block text-sm font-medium text-gray-700 mb-1">
-                        Organization Slug
+                        Slug Organizzazione
                       </label>
                       <input
                         type="text"
                         id="orgSlug"
                         name="orgSlug"
                         required
-                        placeholder="my-theatre-company"
+                        placeholder="la-mia-compagnia-teatrale"
                         pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Used in URLs. Only lowercase letters, numbers, and hyphens.
+                        Usato negli URL. Solo lettere minuscole, numeri e trattini.
                       </p>
                     </div>
                     <Button type="submit" className="w-full">
-                      Create Organization
+                      Crea Organizzazione
                     </Button>
                   </div>
                 </form>
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-2">Or</p>
+                <p className="text-sm text-gray-600 mb-2">Oppure</p>
                 <form action={async () => {
                   'use server';
-                  // Create a demo organization for testing
-                  const demoOrgId = `demo-org-${Date.now()}`;
 
-                  console.log('Setting demo organization:', demoOrgId);
+                  try {
+                    // Get current user in server action context
+                    const currentUser = await getCurrentUser();
+                    if (!currentUser) {
+                      console.error('No authenticated user found for demo');
+                      redirect('/organizations/select?error=No%20authenticated%20user%20found');
+                    }
 
-                  // Set the demo organization as current (without creating in DB)
-                  await setCurrentOrganization(demoOrgId);
+                    // Create a demo organization for testing
+                    const demoSlug = `demo-org-${Date.now()}`;
 
-                  redirect('/dashboard');
+                    console.log('Creating demo organization:', demoSlug);
+
+                    // Create the demo organization in database
+                    const services = await getServices();
+                    const demoOrg = await services.organizationService.createOrganization({
+                      name: 'Compagnia Teatrale Demo',
+                      slug: demoSlug,
+                      description: 'Organizzazione demo per testare Drama Desk',
+                      contactEmail: currentUser.email,
+                    }, currentUser.id);
+
+                    console.log('Demo organization created:', demoOrg);
+
+                    // Set the demo organization as current
+                    await setCurrentOrganization(demoOrg.id);
+
+                    redirect('/dashboard');
+                  } catch (error) {
+                    console.error('Error creating demo organization:', error);
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to create demo organization';
+                    redirect(`/organizations/select?error=${encodeURIComponent(errorMessage)}`);
+                  }
                 }}>
                   <Button type="submit" variant="outline" className="w-full mb-2">
-                    Quick Demo (No Database)
+                    Demo Rapida
                   </Button>
                 </form>
                 <a href="/">
                   <Button variant="outline" className="w-full">
-                    Back to Home
+                    Torna alla Home
                   </Button>
                 </a>
               </div>
@@ -180,9 +218,9 @@ export default async function OrganizationSelectPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Select Organization</CardTitle>
+          <CardTitle>Seleziona Organizzazione</CardTitle>
           <CardDescription>
-            Choose which theatre organization you want to work with
+            Scegli con quale organizzazione teatrale vuoi lavorare
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

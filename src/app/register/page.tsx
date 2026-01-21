@@ -22,12 +22,12 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error('Le password non corrispondono');
       return;
     }
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error('La password deve essere di almeno 6 caratteri');
       return;
     }
 
@@ -45,8 +45,8 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success('Registration successful! Please check your email to verify your account.');
-      router.push('/login?message=Please check your email to verify your account');
+      toast.success('Registrazione completata! Controlla la tua email per verificare l\'account.');
+      router.push('/login?message=Controlla la tua email per verificare l\'account');
     } catch (error) {
       toast.error('An unexpected error occurred');
     } finally {
@@ -61,9 +61,9 @@ export default function RegisterPage() {
           <div className="flex justify-center mb-4">
             <Theater className="h-12 w-12 text-blue-600" />
           </div>
-          <CardTitle className="text-2xl">Join Drama Desk</CardTitle>
+          <CardTitle className="text-2xl">Unisciti a Drama Desk</CardTitle>
           <CardDescription>
-            Create your account to start managing your theatre organization
+            Crea il tuo account per iniziare a gestire la tua organizzazione teatrale
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -73,7 +73,7 @@ export default function RegisterPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Inserisci la tua email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -84,33 +84,33 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Create a password"
+                placeholder="Crea una password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">Conferma Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="Confirm your password"
+                placeholder="Conferma la tua password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? 'Creazione Account...' : 'Crea Account'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
+              Hai già un account?{' '}
               <Link href="/login" className="text-blue-600 hover:underline">
-                Sign in here
+                Accedi qui
               </Link>
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function RegisterPage() {
             <Link href="/">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
+                Torna alla Home
               </Button>
             </Link>
           </div>

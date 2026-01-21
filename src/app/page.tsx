@@ -34,16 +34,16 @@ export default async function Home() {
                     <Button variant="ghost">Dashboard</Button>
                   </Link>
                   <Link href="/admin">
-                    <Button>Admin Panel</Button>
+                    <Button>Pannello Admin</Button>
                   </Link>
                 </>
               ) : (
                 <>
                   <Link href="/login">
-                    <Button variant="ghost">Sign In</Button>
+                    <Button variant="ghost">Accedi</Button>
                   </Link>
                   <Link href="/register">
-                    <Button>Get Started</Button>
+                    <Button>Inizia</Button>
                   </Link>
                 </>
               )}
@@ -59,29 +59,29 @@ export default async function Home() {
             <div className="flex justify-center mb-6">
               <Badge variant="secondary" className="px-4 py-2">
                 <Sparkles className="h-4 w-4 mr-2" />
-                Theatre Management Made Simple
+                Gestione Teatrale Semplificata
               </Badge>
             </div>
             {user ? (
               <>
                 <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                  Welcome back to
+                  Bentornato su
                   <span className="text-blue-600 block">Drama Desk</span>
                 </h1>
                 <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                  Continue managing your theatre operations. Access your dashboard to manage
-                  students, classes, shows, and productions.
+                  Continua a gestire le tue operazioni teatrali. Accedi alla dashboard per gestire
+                  studenti, classi, spettacoli e produzioni.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link href="/organizations/select">
                     <Button size="lg" className="text-lg px-8 py-3">
-                      Go to Dashboard
+                      Vai alla Dashboard
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
                   <Link href="/admin">
                     <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-                      Admin Panel
+                      Pannello Admin
                     </Button>
                   </Link>
                 </div>
@@ -89,23 +89,23 @@ export default async function Home() {
             ) : (
               <>
                 <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                  Manage Your Theatre
-                  <span className="text-blue-600 block">Like a Pro</span>
+                  Gestisci il Tuo Teatro
+                  <span className="text-blue-600 block">Come un Professionista</span>
                 </h1>
                 <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                  Drama Desk is the complete multi-tenant SaaS solution for theatre associations.
-                  Manage students, classes, shows, and productions with ease.
+                  Drama Desk è la soluzione SaaS multi-tenant completa per associazioni teatrali.
+                  Gestisci studenti, classi, spettacoli e produzioni con facilità.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link href="/register">
                     <Button size="lg" className="text-lg px-8 py-3">
-                      Start Free Trial
+                      Inizia Prova Gratuita
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
                   <Link href="/login">
                     <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-                      Sign In
+                      Accedi
                     </Button>
                   </Link>
                 </div>
@@ -120,10 +120,10 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need for Theatre Management
+              Tutto Quello Che Ti Serve per la Gestione Teatrale
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              From student enrollment to curtain call, manage every aspect of your theatre operations.
+              Dall'iscrizione degli studenti al sipario finale, gestisci ogni aspetto delle tue operazioni teatrali.
             </p>
           </div>
 
@@ -133,9 +133,9 @@ export default async function Home() {
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                   <Users className="h-6 w-6 text-blue-600" />
                 </div>
-                <CardTitle>Student Management</CardTitle>
+                <CardTitle>Gestione Studenti</CardTitle>
                 <CardDescription>
-                  Track student information, emergency contacts, and enrollment history.
+                  Traccia informazioni degli studenti, contatti di emergenza e storico iscrizioni.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -145,9 +145,9 @@ export default async function Home() {
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
                   <Calendar className="h-6 w-6 text-green-600" />
                 </div>
-                <CardTitle>Class Scheduling</CardTitle>
+                <CardTitle>Pianificazione Classi</CardTitle>
                 <CardDescription>
-                  Create and manage classes with flexible scheduling and capacity management.
+                  Crea e gestisci classi con pianificazione flessibile e gestione capacità.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -157,9 +157,9 @@ export default async function Home() {
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                   <Theater className="h-6 w-6 text-purple-600" />
                 </div>
-                <CardTitle>Production Management</CardTitle>
+                <CardTitle>Gestione Produzioni</CardTitle>
                 <CardDescription>
-                  Plan shows, assign roles, and track casting decisions with ease.
+                  Pianifica spettacoli, assegna ruoli e traccia decisioni di casting con facilità.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -171,20 +171,20 @@ export default async function Home() {
       <section className="py-20 bg-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Theatre Operations?
+            Pronto a Trasformare le Tue Operazioni Teatrali?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of theatre professionals who trust Drama Desk to manage their productions.
+            Unisciti a migliaia di professionisti del teatro che affidano a Drama Desk la gestione delle loro produzioni.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
               <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
-                Start Your Free Trial
+                Inizia la Tua Prova Gratuita
               </Button>
             </Link>
             <Link href="/login">
               <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-blue-600">
-                Sign In to Your Account
+                Accedi al Tuo Account
               </Button>
             </Link>
           </div>
@@ -201,10 +201,10 @@ export default async function Home() {
             </div>
             <div className="flex space-x-6">
               <Link href="/login" className="text-gray-400 hover:text-white transition-colors">
-                Sign In
+                Accedi
               </Link>
               <Link href="/register" className="text-gray-400 hover:text-white transition-colors">
-                Register
+                Registrati
               </Link>
             </div>
           </div>
