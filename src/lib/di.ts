@@ -21,6 +21,7 @@ import {
   ShowService,
   OrganizationService
 } from '../application/services/index';
+import { GetDashboardDataUseCase } from '../application/use-cases/get-dashboard-data';
 
 // Repository interfaces
 export interface Repositories {
@@ -39,6 +40,7 @@ export interface ApplicationServices {
   classService: ClassService;
   showService: ShowService;
   organizationService: OrganizationService;
+  getDashboardData: GetDashboardDataUseCase;
 }
 
 // Main container class
@@ -106,6 +108,11 @@ export class Container {
         classService: new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
         showService: new ShowService(repositories.showRepository, repositories.roleRepository, repositories.castingRepository),
         organizationService: new OrganizationService(repositories.organizationRepository),
+        getDashboardData: new GetDashboardDataUseCase(
+          new StudentService(repositories.studentRepository),
+          new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
+          new ShowService(repositories.showRepository, repositories.roleRepository, repositories.castingRepository)
+        ),
       };
     }
 
@@ -121,6 +128,11 @@ export class Container {
       classService: new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
       showService: new ShowService(repositories.showRepository, repositories.roleRepository, repositories.castingRepository),
       organizationService: new OrganizationService(repositories.organizationRepository),
+      getDashboardData: new GetDashboardDataUseCase(
+        new StudentService(repositories.studentRepository),
+        new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
+        new ShowService(repositories.showRepository, repositories.roleRepository, repositories.castingRepository)
+      ),
     };
   }
 

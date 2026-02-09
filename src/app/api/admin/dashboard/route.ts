@@ -5,7 +5,15 @@ import { getServices } from '@/lib/di';
 export async function GET() {
   try {
     // Only allow authenticated users to access admin data
-    await requireAuth();
+    try {
+      await requireAuth();
+    } catch (error) {
+      // If auth fails, return 401 instead of redirecting
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // For now, return mock data while we fix the database queries
     // TODO: Replace with real data from database

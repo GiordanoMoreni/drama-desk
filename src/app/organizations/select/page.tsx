@@ -87,8 +87,9 @@ export default async function OrganizationSelectPage({ searchParams }: Organizat
 
                     console.log('Creating organization:', { name: orgName, slug: orgSlug, userId: currentUser.id });
 
-                    // Create the organization in database
-                    const services = await getServices();
+                    // Create the organization in database using admin client to bypass RLS
+                    const { getAdminServices } = await import('@/lib/di');
+                    const services = await getAdminServices();
                     const newOrg = await services.organizationService.createOrganization({
                       name: orgName.trim(),
                       slug: orgSlug.trim(),
@@ -164,8 +165,9 @@ export default async function OrganizationSelectPage({ searchParams }: Organizat
 
                     console.log('Creating demo organization:', demoSlug);
 
-                    // Create the demo organization in database
-                    const services = await getServices();
+                    // Create the demo organization in database using admin client to bypass RLS
+                    const { getAdminServices } = await import('@/lib/di');
+                    const services = await getAdminServices();
                     const demoOrg = await services.organizationService.createOrganization({
                       name: 'Compagnia Teatrale Demo',
                       slug: demoSlug,
@@ -203,9 +205,8 @@ export default async function OrganizationSelectPage({ searchParams }: Organizat
   }
 
   if (organizations.length === 1) {
-    // Auto-select if user only has one organization
-    await setCurrentOrganization(organizations[0].organizationId);
-    redirect('/dashboard');
+    // Auto-select if user only has one organization - redirect to auto-select route
+    redirect(`/organizations/select/auto-select?org=${organizations[0].organizationId}`);
   }
 
   async function selectOrganization(organizationId: string) {

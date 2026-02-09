@@ -1,30 +1,26 @@
+'use server';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Calendar, Theater, TrendingUp, Clock } from 'lucide-react';
 import { requireOrganization } from '@/lib/auth';
+import { getServices } from '@/lib/di';
 
-async function getDashboardData() {
+async function getDashboardData(organizationId: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/dashboard`, {
-      cache: 'no-store', // Always fetch fresh data
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch dashboard data:', response.statusText);
-      return null;
-    }
-
-    return await response.json();
+    const services = await getServices();
+    const dashboardData = await services.getDashboardData.execute(organizationId);
+    return dashboardData;
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
+    console.error('Failed to get dashboard data:', error);
     return null;
   }
 }
 
 export default async function DashboardPage() {
   const { organization } = await requireOrganization();
-  const dashboardData = await getDashboardData() || {
+  const dashboardData = await getDashboardData(organization.organizationId) || {
     totalStudents: 0,
     activeClasses: 0,
     upcomingShows: 0,
