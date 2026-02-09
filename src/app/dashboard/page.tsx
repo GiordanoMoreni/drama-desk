@@ -1,199 +1,139 @@
 export const dynamic = 'force-dynamic';
 
+import { redirect } from 'next/navigation';
+import { getCurrentUser, getUserOrganizations } from '@/lib/auth';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Users, Calendar, Theater, TrendingUp, Clock } from 'lucide-react';
-import { requireOrganization } from '@/lib/auth';
-import { getServices } from '@/lib/di';
-import { t, interpolate } from '@/lib/translations';
-
-async function getDashboardData(organizationId: string) {
-  try {
-    const services = await getServices();
-    const dashboardData = await services.getDashboardData.execute(organizationId);
-    return dashboardData;
-  } catch (error) {
-    console.error('Failed to get dashboard data:', error);
-    return null;
-  }
-}
+import { Plus, ArrowRight, Building2 } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
-  const { organization } = await requireOrganization();
-  const dashboardData = await getDashboardData(organization.organizationId) || {
-    totalStudents: 0,
-    activeClasses: 0,
-    upcomingShows: 0,
-    studentStats: { totalActive: 0, byGrade: {} },
-    classStats: { totalActive: 0, totalEnrollments: 0 },
-    showStats: { totalActive: 0, planningShows: 0, rehearsingShows: 0, performingShows: 0 },
-    recentActivity: []
-  };
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  const organizations = await getUserOrganizations(user.id);
 
   return (
-    <>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h2>
-        <p className="text-gray-600">
-          {interpolate(t('dashboard.welcome'), { organization: organization.organizationName })}
-        </p>
-      </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.totalStudents')}</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.totalStudents || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('dashboard.activeStudents')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.activeClasses')}</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.activeClasses || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('dashboard.classesRunning')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.upcomingShows')}</CardTitle>
-              <Theater className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.upcomingShows || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('dashboard.showsPlanning')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.classEnrollments')}</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.classStats?.totalEnrollments || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('dashboard.totalEnrollments')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Additional Stats */}
-        {dashboardData?.studentStats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  {t('dashboard.studentDistribution')}
-                </CardTitle>
-                <CardDescription>
-                  {t('dashboard.breakdownByGrade')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {Object.entries(dashboardData.studentStats.byGrade).map(([grade, count]) => (
-                    <div key={grade} className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{grade}</span>
-                      <Badge variant="secondary">{String(count)}</Badge>
-                    </div>
-                  ))}
-                  {Object.keys(dashboardData.studentStats.byGrade).length === 0 && (
-                    <p className="text-sm text-muted-foreground">{t('common.noDataAvailable')}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  {t('dashboard.recentActivity')}
-                </CardTitle>
-                <CardDescription>
-                  {t('dashboard.latestUpdates')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {dashboardData.recentActivity.slice(0, 5).map((activity: any) => (
-                    <div key={activity.id} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{activity.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {activity.timestamp.toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {activity.type.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                  ))}
-                  {dashboardData.recentActivity.length === 0 && (
-                    <p className="text-sm text-muted-foreground">{t('admin.noRecentActivity')}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.quickActions')}</CardTitle>
-            <CardDescription>
-              {t('dashboard.commonTasks')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button className="h-20 flex-col space-y-2" asChild>
-                <a href="/dashboard/students">
-                  <Users className="h-6 w-6" />
-                  <span>{t('dashboard.manageStudents')}</span>
-                </a>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
-                <a href="/dashboard/classes">
-                  <Calendar className="h-6 w-6" />
-                  <span>{t('dashboard.manageClasses')}</span>
-                </a>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
-                <a href="/dashboard/shows">
-                  <Theater className="h-6 w-6" />
-                  <span>{t('dashboard.manageShows')}</span>
-                </a>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
-                <a href="/dashboard/organization">
-                  <Users className="h-6 w-6" />
-                  <span>{t('dashboard.organizationSettings')}</span>
-                </a>
-              </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Drama Desk</h1>
+              <p className="text-gray-600 mt-1">Le tue associazioni teatrali</p>
             </div>
-          </CardContent>
-        </Card>
-    </>
+            <Link href="/organizations/select?from=dashboard">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nuova Associazione
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {organizations.length > 0 ? (
+          <div>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Seleziona un'associazione
+              </h2>
+              <p className="text-gray-600">
+                Accedi al pannello di una delle tue associazioni teatrali
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {organizations.map((org) => (
+                <Link
+                  key={org.organizationId}
+                  href={`/dashboard/${org.organizationId}`}
+                >
+                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">
+                            {org.organizationName}
+                          </CardTitle>
+                          <CardDescription className="text-sm mt-1">
+                            Vai alla dashboard
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors shrink-0">
+                          <Building2 className="h-6 w-6" />
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <Badge
+                          variant={org.userRole === 'admin' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {org.userRole === 'admin' ? 'Amministratore' : org.userRole === 'teacher' ? 'Insegnante' : 'Staff'}
+                        </Badge>
+                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {/* Create new org */}
+            <div className="mt-12 pt-8 border-t">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Crea una nuova associazione
+              </h3>
+              <Link href="/organizations/select?from=dashboard">
+                <Card className="border-2 border-dashed hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer">
+                  <CardContent className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-blue-100 text-blue-600 mb-4">
+                        <Plus className="h-8 w-8" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        Crea una nuova associazione
+                      </h4>
+                      <p className="text-gray-600 text-sm mt-1">
+                        Fonda una nuova organizzazione teatrale
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle>Benvenuto in Drama Desk!</CardTitle>
+              <CardDescription>
+                Non sei ancora membro di nessuna organizzazione teatrale.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Crea la tua prima associazione teatrale per iniziare a gestire lezioni, spettacoli e studenti.
+              </p>
+              <Link href="/organizations/select?from=dashboard" className="block">
+                <Button className="w-full gap-2">
+                  <Plus className="h-4 w-4" />
+                  Crea la tua prima associazione
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+      </main>
+    </div>
   );
 }

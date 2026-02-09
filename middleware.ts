@@ -7,6 +7,36 @@ export async function middleware(request: NextRequest) {
   console.log('Request path:', request.nextUrl.pathname);
   console.log('Request method:', request.method);
 
+  // Redirect old dashboard routes to new structure
+  // /dashboard/students -> /dashboard/[organizationId]/students
+  const pathname = request.nextUrl.pathname;
+  const dashboardRoutes = [
+    'students',
+    'classes',
+    'shows',
+    'organization',
+    'profile',
+  ];
+
+  for (const route of dashboardRoutes) {
+    if (pathname === `/dashboard/${route}` || pathname.startsWith(`/dashboard/${route}/`)) {
+      // Get the organization ID from the cookie
+      const orgCookie = request.cookies.get('current-organization');
+      const organizationId = orgCookie?.value;
+
+      if (organizationId) {
+        // Redirect to new route structure
+        const newPath = pathname.replace(`/dashboard/`, `/dashboard/${organizationId}/`);
+        console.log(`Redirecting ${pathname} to ${newPath}`);
+        return NextResponse.redirect(new URL(newPath, request.url));
+      } else {
+        // No organization selected, redirect to dashboard
+        console.log(`No organization selected for ${pathname}, redirecting to /dashboard`);
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    }
+  }
+
   // Debug: log all API requests
   if (request.nextUrl.pathname.startsWith('/api/')) {
     console.log('=== MIDDLEWARE API REQUEST ===');
