@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateOrganizationFormData, UpdateOrganizationFormData, createOrganizationSchema, updateOrganizationSchema } from '@/lib/validations/organization';
 import { Organization } from '@/domain/entities';
+import { t } from '@/lib/translations';
 
 interface OrganizationFormProps {
   initialData?: Partial<Organization>;
@@ -49,18 +50,18 @@ export function OrganizationForm({ initialData, onSubmit, isLoading }: Organizat
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle>{t('organizations.organizationName')}</CardTitle>
             <CardDescription>
-              Enter the basic details for this organization.
+              {t('organizations.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="name">Organization Name *</Label>
+              <Label htmlFor="name">{t('organizations.organizationName')} *</Label>
               <Input
                 id="name"
                 {...register('name')}
-                placeholder="e.g., Springfield Community Theater"
+                placeholder={t('organizations.organizationName')}
               />
               {errors.name && (
                 <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
@@ -131,9 +132,9 @@ export function OrganizationForm({ initialData, onSubmit, isLoading }: Organizat
         {/* Contact Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
+            <CardTitle>{t('auth.email')}</CardTitle>
             <CardDescription>
-              How can people reach your organization?
+              Come possono contattare la tua organizzazione?
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

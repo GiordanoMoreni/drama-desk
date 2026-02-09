@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateShowFormData, UpdateShowFormData, createShowSchema, updateShowSchema } from '@/lib/validations/show';
 import { Show } from '@/domain/entities';
+import { t } from '@/lib/translations';
 
 interface ShowFormProps {
   initialData?: Partial<Show>;
@@ -56,18 +57,18 @@ export function ShowForm({ initialData, onSubmit, isLoading, organizationId, dir
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle>{t('shows.title')}</CardTitle>
             <CardDescription>
-              Enter the basic details for this show.
+              {t('shows.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="title">Show Title *</Label>
+              <Label htmlFor="title">{t('shows.showTitle')} *</Label>
               <Input
                 id="title"
                 {...register('title')}
-                placeholder="e.g., Romeo and Juliet"
+                placeholder={t('shows.showTitle')}
               />
               {errors.title && (
                 <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>
@@ -88,16 +89,16 @@ export function ShowForm({ initialData, onSubmit, isLoading, organizationId, dir
             </div>
 
             <div>
-              <Label htmlFor="directorId">Director</Label>
+              <Label htmlFor="directorId">{t('shows.director')}</Label>
               <Select
                 value={watch('directorId') || ''}
                 onValueChange={(value) => setValue('directorId', value === 'none' ? undefined : value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a director" />
+                  <SelectValue placeholder={t('shows.director')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No director assigned</SelectItem>
+                  <SelectItem value="none">Nessun regista assegnato</SelectItem>
                   {directors.map((director) => (
                     <SelectItem key={director.id} value={director.id}>
                       {director.firstName} {director.lastName} ({director.email})
@@ -115,9 +116,9 @@ export function ShowForm({ initialData, onSubmit, isLoading, organizationId, dir
         {/* Production Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Production Details</CardTitle>
+            <CardTitle>Dettagli Produzione</CardTitle>
             <CardDescription>
-              Set the production schedule and venue.
+              Imposta il calendario della produzione e la sede.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

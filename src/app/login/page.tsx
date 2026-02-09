@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { t } from '@/lib/translations';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,16 +30,16 @@ export default function LoginPage() {
       });
 
       if (error) {
-        toast.error(`Login failed: ${error.message}`);
+        toast.error(`Accesso non riuscito: ${error.message}`);
         return;
       }
 
       if (!data.user) {
-        toast.error('Login failed: No user data received');
+        toast.error(t('errors.unauthorized'));
         return;
       }
 
-      toast.success('Login successful!');
+      toast.success(t('auth.login') + ' ' + t('common.success'));
       console.log('Login successful, redirecting to organizations...');
       console.log('User data:', data.user);
 
@@ -50,7 +51,7 @@ export default function LoginPage() {
 
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('An unexpected error occurred during login');
+      toast.error(t('errors.internalServerError'));
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +64,7 @@ export default function LoginPage() {
     // Set default organization for admin testing
     document.cookie = `current-organization=admin-test-org-1; path=/; max-age=86400`;
 
-    toast.success('Admin login successful!');
+    toast.success(t('admin.adminDashboard'));
     router.push('/dashboard');
   };
 
@@ -109,7 +110,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-center space-x-2 mb-3">
               <AlertTriangle className="h-4 w-4 text-orange-500" />
               <Badge variant="secondary" className="text-xs">
-                Modalità Sviluppo
+                Development Mode
               </Badge>
             </div>
             <Button
@@ -122,7 +123,7 @@ export default function LoginPage() {
               Accesso Test Admin
             </Button>
             <p className="text-xs text-gray-500 text-center mt-2">
-              Solo per scopi di test. Bypassa l'autenticazione.
+              Solo per scopi di test.
             </p>
           </div>
         </CardContent>

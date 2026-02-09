@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Users, Calendar, Theater, TrendingUp, Clock } from 'lucide-react';
 import { requireOrganization } from '@/lib/auth';
 import { getServices } from '@/lib/di';
+import { t, interpolate } from '@/lib/translations';
 
 async function getDashboardData(organizationId: string) {
   try {
@@ -33,9 +34,9 @@ export default async function DashboardPage() {
   return (
     <>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h2>
         <p className="text-gray-600">
-          Welcome to {organization.organizationName}
+          {interpolate(t('dashboard.welcome'), { organization: organization.organizationName })}
         </p>
       </div>
 
@@ -43,52 +44,52 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.totalStudents')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboardData?.totalStudents || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Active students in your organization
+                {t('dashboard.activeStudents')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.activeClasses')}</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboardData?.activeClasses || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Classes currently running
+                {t('dashboard.classesRunning')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming Shows</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.upcomingShows')}</CardTitle>
               <Theater className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboardData?.upcomingShows || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Shows in planning or production
+                {t('dashboard.showsPlanning')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Class Enrollments</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.classEnrollments')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboardData?.classStats?.totalEnrollments || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Total student enrollments
+                {t('dashboard.totalEnrollments')}
               </p>
             </CardContent>
           </Card>
@@ -101,10 +102,10 @@ export default async function DashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Student Distribution by Grade
+                  {t('dashboard.studentDistribution')}
                 </CardTitle>
                 <CardDescription>
-                  Breakdown of active students by grade level
+                  {t('dashboard.breakdownByGrade')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -116,7 +117,7 @@ export default async function DashboardPage() {
                     </div>
                   ))}
                   {Object.keys(dashboardData.studentStats.byGrade).length === 0 && (
-                    <p className="text-sm text-muted-foreground">No grade data available</p>
+                    <p className="text-sm text-muted-foreground">{t('common.noDataAvailable')}</p>
                   )}
                 </div>
               </CardContent>
@@ -126,10 +127,10 @@ export default async function DashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5" />
-                  Recent Activity
+                  {t('dashboard.recentActivity')}
                 </CardTitle>
                 <CardDescription>
-                  Latest updates in your organization
+                  {t('dashboard.latestUpdates')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -148,7 +149,7 @@ export default async function DashboardPage() {
                     </div>
                   ))}
                   {dashboardData.recentActivity.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No recent activity</p>
+                    <p className="text-sm text-muted-foreground">{t('admin.noRecentActivity')}</p>
                   )}
                 </div>
               </CardContent>
@@ -159,9 +160,9 @@ export default async function DashboardPage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>{t('dashboard.quickActions')}</CardTitle>
             <CardDescription>
-              Common tasks for managing your theatre organization
+              {t('dashboard.commonTasks')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -169,25 +170,25 @@ export default async function DashboardPage() {
               <Button className="h-20 flex-col space-y-2" asChild>
                 <a href="/dashboard/students">
                   <Users className="h-6 w-6" />
-                  <span>Manage Students</span>
+                  <span>{t('dashboard.manageStudents')}</span>
                 </a>
               </Button>
               <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
                 <a href="/dashboard/classes">
                   <Calendar className="h-6 w-6" />
-                  <span>Manage Classes</span>
+                  <span>{t('dashboard.manageClasses')}</span>
                 </a>
               </Button>
               <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
                 <a href="/dashboard/shows">
                   <Theater className="h-6 w-6" />
-                  <span>Manage Shows</span>
+                  <span>{t('dashboard.manageShows')}</span>
                 </a>
               </Button>
               <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
                 <a href="/dashboard/organization">
                   <Users className="h-6 w-6" />
-                  <span>Organization Settings</span>
+                  <span>{t('dashboard.organizationSettings')}</span>
                 </a>
               </Button>
             </div>

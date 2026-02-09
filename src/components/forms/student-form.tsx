@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { t } from '@/lib/translations';
 
 interface StudentFormProps {
   onSubmit: (data: CreateStudentFormData) => Promise<void>;
@@ -21,8 +22,8 @@ export function StudentForm({
   onSubmit,
   isLoading = false,
   defaultValues,
-  title = "Add New Student",
-  description = "Enter the student's information below"
+  title = t('students.addNewStudent'),
+  description = t('students.description')
 }: StudentFormProps) {
   const {
     register,
@@ -69,11 +70,11 @@ export function StudentForm({
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name *</Label>
+              <Label htmlFor="firstName">{t('students.firstName')} *</Label>
               <Input
                 id="firstName"
                 {...register('firstName')}
-                placeholder="Enter first name"
+                placeholder={t('students.firstName')}
               />
               {errors.firstName && (
                 <p className="text-sm text-red-600">{errors.firstName.message}</p>
@@ -81,11 +82,11 @@ export function StudentForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name *</Label>
+              <Label htmlFor="lastName">{t('students.lastName')} *</Label>
               <Input
                 id="lastName"
                 {...register('lastName')}
-                placeholder="Enter last name"
+                placeholder={t('students.lastName')}
               />
               {errors.lastName && (
                 <p className="text-sm text-red-600">{errors.lastName.message}</p>
@@ -96,12 +97,12 @@ export function StudentForm({
           {/* Contact Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
                 {...register('email')}
-                placeholder="Enter email address"
+                placeholder={t('auth.email')}
               />
               {errors.email && (
                 <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -109,11 +110,11 @@ export function StudentForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">Telefono</Label>
               <Input
                 id="phone"
                 {...register('phone')}
-                placeholder="Enter phone number"
+                placeholder="Numero di telefono"
               />
             </div>
           </div>
@@ -121,7 +122,7 @@ export function StudentForm({
           {/* Additional Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Label htmlFor="dateOfBirth">{t('students.dateOfBirth')}</Label>
               <Input
                 id="dateOfBirth"
                 type="date"
@@ -133,11 +134,11 @@ export function StudentForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gradeLevel">Grade Level</Label>
+              <Label htmlFor="gradeLevel">Livello</Label>
               <Input
                 id="gradeLevel"
                 {...register('gradeLevel')}
-                placeholder="e.g., 9th Grade, Freshman"
+                placeholder="es. 9° Liceo, Freshman"
               />
             </div>
           </div>
@@ -145,7 +146,7 @@ export function StudentForm({
           {/* Emergency Contact */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
+              <Label htmlFor="emergencyContactName">Contatto di Emergenza</Label>
               <Input
                 id="emergencyContactName"
                 {...register('emergencyContactName')}

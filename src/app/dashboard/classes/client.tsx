@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Edit, Trash2, Users, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { t } from '@/lib/translations';
 
 interface ClassesPageClientProps {
   organizationId: string;
@@ -54,7 +55,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
       setClasses(data.data);
     } catch (error) {
       console.error('Error fetching classes:', error);
-      toast.error('Failed to load classes');
+      toast.error(t('errors.failedToFetch'));
     }
   };
 
@@ -95,10 +96,10 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
       const newClass = await response.json();
       setClasses(prev => [newClass, ...prev]);
       setIsCreateDialogOpen(false);
-      toast.success('Class created successfully');
+      toast.success(t('classes.classCreatedSuccess'));
     } catch (error) {
       console.error('Error creating class:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create class');
+      toast.error(error instanceof Error ? error.message : t('errors.failedToCreate'));
     } finally {
       setIsLoading(false);
     }
@@ -125,17 +126,17 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
       const updatedClass = await response.json();
       setClasses(prev => prev.map(c => c.id === updatedClass.id ? updatedClass : c));
       setEditingClass(null);
-      toast.success('Class updated successfully');
+      toast.success(t('classes.classUpdatedSuccess'));
     } catch (error) {
       console.error('Error updating class:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update class');
+      toast.error(error instanceof Error ? error.message : t('errors.failedToUpdate'));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteClass = async (classId: string) => {
-    if (!confirm('Are you sure you want to delete this class?')) return;
+    if (!confirm(t('common.delete') + '?')) return;
 
     try {
       const response = await fetch(`/api/classes/${classId}`, {
@@ -148,15 +149,15 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
       }
 
       setClasses(prev => prev.filter(c => c.id !== classId));
-      toast.success('Class deleted successfully');
+      toast.success(t('classes.classDeletedSuccess'));
     } catch (error) {
       console.error('Error deleting class:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete class');
+      toast.error(error instanceof Error ? error.message : t('errors.failedToDelete'));
     }
   };
 
   const formatSchedule = (schedule: any) => {
-    if (!schedule) return 'No schedule set';
+    if (!schedule) return t('common.loading');
 
     const days = schedule.days?.map((day: string) => day.charAt(0).toUpperCase() + day.slice(1)).join(', ') || '';
     const time = schedule.startTime && schedule.endTime ? `${schedule.startTime} - ${schedule.endTime}` : '';
@@ -168,14 +169,14 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Classes</h1>
-          <p className="text-muted-foreground">Manage your theater classes and enrollments</p>
+          <h1 className="text-2xl font-bold">{t('classes.title')}</h1>
+          <p className="text-muted-foreground">{t('classes.description')}</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add Class
+              {t('classes.addNewClass')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -202,7 +203,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search classes..."
+                  placeholder={t('classes.className')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -214,9 +215,9 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
               onChange={(e) => setIsActiveFilter(e.target.value === 'all' ? undefined : e.target.value === 'true')}
               className="px-3 py-2 border rounded-md"
             >
-              <option value="all">All Classes</option>
-              <option value="true">Active Only</option>
-              <option value="false">Inactive Only</option>
+              <option value="all">{t('classes.title')}</option>
+              <option value="true">Attive</option>
+              <option value="false">Inattive</option>
             </select>
           </div>
         </CardContent>
@@ -225,20 +226,20 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
       {/* Classes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Classes ({classes.length})</CardTitle>
+          <CardTitle>{t('classes.title')} ({classes.length})</CardTitle>
           <CardDescription>
-            View and manage all classes in your organization
+            {t('classes.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Class Name</TableHead>
-                <TableHead>Teacher</TableHead>
-                <TableHead>Schedule</TableHead>
-                <TableHead>Enrolled</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t('classes.className')}</TableHead>
+                <TableHead>{t('classes.teacher')}</TableHead>
+                <TableHead>Orario</TableHead>
+                <TableHead>Iscritti</TableHead>
+                <TableHead>{t('classes.status')}</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Theater, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { t } from '@/lib/translations';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -48,7 +49,7 @@ export default function RegisterPage() {
       toast.success('Registrazione completata! Controlla la tua email per verificare l\'account.');
       router.push('/login?message=Controlla la tua email per verificare l\'account');
     } catch (error) {
-      toast.error('An unexpected error occurred');
+      toast.error(t('errors.internalServerError'));
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +109,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Hai già un account?{' '}
+              Hai già un account?{' '}"
               <Link href="/login" className="text-blue-600 hover:underline">
                 Accedi qui
               </Link>

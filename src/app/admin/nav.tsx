@@ -10,13 +10,14 @@ import {
   Settings,
   UserPlus
 } from 'lucide-react';
+import { t } from '@/lib/translations';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: BarChart3 },
-  { name: 'Organizations', href: '/admin/organizations', icon: Building2 },
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Invitations', href: '/admin/invitations', icon: UserPlus },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: t('admin.adminDashboard'), href: '/admin', icon: BarChart3 },
+  { name: t('organizations.title'), href: '/admin/organizations', icon: Building2 },
+  { name: t('admin.totalUsers').replace('Utenti Totali', 'Utenti'), href: '/admin/users', icon: Users },
+  { name: 'Inviti', href: '/admin/invitations', icon: UserPlus },
+  { name: 'Impostazioni', href: '/admin/settings', icon: Settings },
 ];
 
 export default function AdminNav() {
@@ -25,7 +26,7 @@ export default function AdminNav() {
   return (
     <nav className="w-64 bg-white shadow-sm border-r">
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Administration</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.adminDashboard')}</h2>
         <ul className="space-y-2">
           {navigation.map((item) => {
             const isActive = pathname === item.href;

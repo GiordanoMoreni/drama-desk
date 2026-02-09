@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateClassFormData, UpdateClassFormData, createClassSchema, updateClassSchema } from '@/lib/validations/class';
 import { Class } from '@/domain/entities';
+import { t } from '@/lib/translations';
 
 interface ClassFormProps {
   initialData?: Partial<Class>;
@@ -22,13 +23,13 @@ interface ClassFormProps {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 'monday', label: 'Monday' },
-  { value: 'tuesday', label: 'Tuesday' },
-  { value: 'wednesday', label: 'Wednesday' },
-  { value: 'thursday', label: 'Thursday' },
-  { value: 'friday', label: 'Friday' },
-  { value: 'saturday', label: 'Saturday' },
-  { value: 'sunday', label: 'Sunday' },
+  { value: 'monday', label: 'Lunedì' },
+  { value: 'tuesday', label: 'Martedì' },
+  { value: 'wednesday', label: 'Mercoledì' },
+  { value: 'thursday', label: 'Giovedì' },
+  { value: 'friday', label: 'Venerdì' },
+  { value: 'saturday', label: 'Sabato' },
+  { value: 'sunday', label: 'Domenica' },
 ] as const;
 
 export function ClassForm({ initialData, onSubmit, isLoading, organizationId, teachers = [] }: ClassFormProps) {
@@ -94,18 +95,18 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle>{t('common.edit')}</CardTitle>
             <CardDescription>
-              Enter the basic details for this class.
+              {t('classes.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="name">Class Name *</Label>
+              <Label htmlFor="name">{t('classes.className')} *</Label>
               <Input
                 id="name"
                 {...register('name')}
-                placeholder="e.g., Beginning Acting"
+                placeholder={t('classes.className')}
               />
               {errors.name && (
                 <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
@@ -113,11 +114,11 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('classes.description')}</Label>
               <Textarea
                 id="description"
                 {...register('description')}
-                placeholder="Describe what students will learn in this class..."
+                placeholder={t('classes.description')}
                 rows={3}
               />
               {errors.description && (
@@ -126,16 +127,16 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
             </div>
 
             <div>
-              <Label htmlFor="teacherId">Teacher</Label>
+              <Label htmlFor="teacherId">{t('classes.teacher')}</Label>
               <Select
                 value={watch('teacherId') || ''}
                 onValueChange={(value) => setValue('teacherId', value === 'none' ? undefined : value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a teacher" />
+                  <SelectValue placeholder={t('classes.teacher')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No teacher assigned</SelectItem>
+                  <SelectItem value="none">Nessun insegnante assegnato</SelectItem>
                   {teachers.map((teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id}>
                       {teacher.firstName} {teacher.lastName} ({teacher.email})

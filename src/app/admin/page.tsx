@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, Users, UserPlus, Activity } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
 import { getAdminServices } from '@/lib/di';
+import { t } from '@/lib/translations';
 
 // Server-side admin dashboard data (avoids using NEXT_PUBLIC_APP_URL)
 async function getAdminDashboardData() {
@@ -58,30 +59,30 @@ export default async function AdminDashboard() {
 
   const stats = [
     {
-      name: 'Total Organizations',
+      name: t('admin.totalOrganizations'),
       value: dashboardData?.totalOrganizations?.toString() || '0',
-      description: 'Active theatre organizations',
+      description: t('admin.activeTheatres'),
       icon: Building2,
       color: 'text-blue-600',
     },
     {
-      name: 'Total Users',
+      name: t('admin.totalUsers'),
       value: dashboardData?.totalUsers?.toString() || '0',
-      description: 'Registered users across all orgs',
+      description: t('admin.registeredUsers'),
       icon: Users,
       color: 'text-green-600',
     },
     {
-      name: 'Pending Invitations',
+      name: t('admin.pendingInvitations'),
       value: dashboardData?.pendingInvitations?.toString() || '0',
-      description: 'Awaiting user acceptance',
+      description: t('admin.awaitingAcceptance'),
       icon: UserPlus,
       color: 'text-orange-600',
     },
     {
-      name: 'Active Sessions',
+      name: t('admin.activeSessions'),
       value: dashboardData?.activeSessions?.toString() || '0',
-      description: 'Users online right now',
+      description: t('admin.usersOnline'),
       icon: Activity,
       color: 'text-purple-600',
     },
@@ -91,9 +92,9 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('admin.adminDashboard')}</h1>
         <p className="text-gray-600 mt-2">
-          Manage organizations, users, and system settings
+          {t('admin.manageOrganizations')}
         </p>
       </div>
 
@@ -116,9 +117,9 @@ export default async function AdminDashboard() {
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>{t('admin.recentActivity')}</CardTitle>
           <CardDescription>
-            Latest administrative actions across the platform
+            {t('admin.latestActions')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -146,9 +147,9 @@ export default async function AdminDashboard() {
           ) : (
             <div className="text-center py-8">
               <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Recent Activity</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('admin.noRecentActivity')}</h3>
               <p className="text-gray-600">
-                Activity will appear here as organizations, classes, and shows are created.
+                {t('admin.activityWilAppear')}
               </p>
             </div>
           )}
@@ -158,9 +159,9 @@ export default async function AdminDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{t('admin.quickActions')}</CardTitle>
           <CardDescription>
-            Common administrative tasks
+            {t('admin.commonAdminTasks')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -168,9 +169,9 @@ export default async function AdminDashboard() {
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="p-6 text-center">
                 <Building2 className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                <h3 className="font-medium text-gray-900">Create Organization</h3>
+                <h3 className="font-medium text-gray-900">{t('admin.createOrganization')}</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Set up a new theatre organization
+                  {t('admin.setupNewTheatre')}
                 </p>
               </CardContent>
             </Card>
@@ -178,9 +179,9 @@ export default async function AdminDashboard() {
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="p-6 text-center">
                 <UserPlus className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                <h3 className="font-medium text-gray-900">Invite Users</h3>
+                <h3 className="font-medium text-gray-900">{t('admin.inviteUsers')}</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Send invitations to new users
+                  {t('admin.sendInvitations')}
                 </p>
               </CardContent>
             </Card>
@@ -188,9 +189,9 @@ export default async function AdminDashboard() {
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="p-6 text-center">
                 <Users className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <h3 className="font-medium text-gray-900">Manage Users</h3>
+                <h3 className="font-medium text-gray-900">{t('admin.manageUsers')}</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  View and manage all users
+                  {t('admin.viewManageAllUsers')}
                 </p>
               </CardContent>
             </Card>

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Edit, Trash2, Search, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { t } from '@/lib/translations';
 
 interface ShowsPageClientProps {
   organizationId: string;
@@ -54,7 +55,7 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
       setShows(data.data);
     } catch (error) {
       console.error('Error fetching shows:', error);
-      toast.error('Failed to load shows');
+      toast.error(t('errors.failedToFetch'));
     }
   };
 
@@ -95,10 +96,10 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
       const newShow = await response.json();
       setShows(prev => [newShow, ...prev]);
       setIsCreateDialogOpen(false);
-      toast.success('Show created successfully');
+      toast.success(t('shows.showCreatedSuccess'));
     } catch (error) {
       console.error('Error creating show:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create show');
+      toast.error(error instanceof Error ? error.message : t('errors.failedToCreate'));
     } finally {
       setIsLoading(false);
     }
@@ -125,17 +126,17 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
       const updatedShow = await response.json();
       setShows(prev => prev.map(s => s.id === updatedShow.id ? updatedShow : s));
       setEditingShow(null);
-      toast.success('Show updated successfully');
+      toast.success(t('shows.showUpdatedSuccess'));
     } catch (error) {
       console.error('Error updating show:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update show');
+      toast.error(error instanceof Error ? error.message : t('errors.failedToUpdate'));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteShow = async (showId: string) => {
-    if (!confirm('Are you sure you want to delete this show?')) return;
+    if (!confirm(t('common.delete') + '?')) return;
 
     try {
       const response = await fetch(`/api/shows/${showId}`, {
@@ -148,10 +149,10 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
       }
 
       setShows(prev => prev.filter(s => s.id !== showId));
-      toast.success('Show deleted successfully');
+      toast.success(t('shows.showDeletedSuccess'));
     } catch (error) {
       console.error('Error deleting show:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete show');
+      toast.error(error instanceof Error ? error.message : t('errors.failedToDelete'));
     }
   };
 
@@ -170,14 +171,14 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Shows</h1>
-          <p className="text-muted-foreground">Manage your theater productions and shows</p>
+          <h1 className="text-2xl font-bold">{t('shows.title')}</h1>
+          <p className="text-muted-foreground">{t('shows.description')}</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add Show
+              {t('shows.addNewShow')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -204,7 +205,7 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search shows..."
+                  placeholder={t('shows.title')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -216,12 +217,12 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 border rounded-md"
             >
-              <option value="all">All Status</option>
-              <option value="planning">Planning</option>
-              <option value="rehearsing">Rehearsing</option>
-              <option value="performing">Performing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="all">Tutti gli Stati</option>
+              <option value="planning">{t('shows.planning')}</option>
+              <option value="rehearsing">{t('shows.rehearsing')}</option>
+              <option value="performing">{t('shows.performing')}</option>
+              <option value="completed">Completato</option>
+              <option value="cancelled">Cancellato</option>
             </select>
           </div>
         </CardContent>
@@ -230,19 +231,19 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
       {/* Shows Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Shows ({shows.length})</CardTitle>
+          <CardTitle>{t('shows.title')} ({shows.length})</CardTitle>
           <CardDescription>
-            View and manage all shows in your organization
+            {t('shows.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Show Title</TableHead>
-                <TableHead>Director</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Dates</TableHead>
+                <TableHead>{t('shows.showTitle')}</TableHead>
+                <TableHead>{t('shows.director')}</TableHead>
+                <TableHead>Stato</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead>Venue</TableHead>
                 <TableHead>Budget</TableHead>
                 <TableHead>Actions</TableHead>

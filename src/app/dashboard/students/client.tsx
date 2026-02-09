@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+import { t } from '@/lib/translations';
 
 interface StudentsPageClientProps {
   initialStudents: PaginatedResult<Student>;
@@ -49,16 +50,16 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
       }));
 
       setIsCreateDialogOpen(false);
-      toast.success('Student created successfully!');
+      toast.success(t('students.studentCreatedSuccess'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create student');
+      toast.error(error instanceof Error ? error.message : t('errors.failedToCreate'));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteStudent = async (studentId: string) => {
-    if (!confirm('Are you sure you want to delete this student?')) return;
+    if (!confirm(t('common.delete') + '?')) return;
 
     try {
       const response = await fetch(`/api/students/${studentId}`, {
@@ -75,15 +76,15 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
         total: prev.total - 1,
       }));
 
-      toast.success('Student deleted successfully!');
+      toast.success(t('students.studentDeletedSuccess'));
     } catch (error) {
-      toast.error('Failed to delete student');
+      toast.error(t('errors.failedToDelete'));
     }
   };
 
   const formatDate = (date?: Date) => {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString();
+    return new Date(date).toLocaleDateString('it-IT');
   };
 
   return (
@@ -91,9 +92,9 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Students</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('students.title')}</h1>
           <p className="text-gray-600">
-            Manage students in your theatre organization
+            {t('students.description')}
           </p>
         </div>
 
@@ -101,7 +102,7 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add Student
+              {t('students.addNewStudent')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -117,7 +118,7 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('students.totalStudents')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{students.total}</div>
@@ -126,7 +127,7 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Students</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.activeStudents')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -137,7 +138,7 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">With Email</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('auth.email')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -150,25 +151,25 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
       {/* Students Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Students</CardTitle>
+          <CardTitle>{t('students.listStudents')}</CardTitle>
           <CardDescription>
-            A list of all students in your organization
+            {t('students.listStudents')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {students.data.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No students found. Add your first student to get started.
+              {t('students.noStudents')}. {t('students.addNewStudent')} {t('common.cancel').toLowerCase()} {t('common.next').toLowerCase()}.
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
+                  <TableHead>{t('students.firstName')}</TableHead>
+                  <TableHead>{t('auth.email')}</TableHead>
                   <TableHead>Grade Level</TableHead>
-                  <TableHead>Date of Birth</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('students.dateOfBirth')}</TableHead>
+                  <TableHead>{t('students.status')}</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -207,7 +208,7 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
                     <TableCell>{formatDate(student.dateOfBirth)}</TableCell>
                     <TableCell>
                       <Badge variant={student.isActive ? 'default' : 'secondary'}>
-                        {student.isActive ? 'Active' : 'Inactive'}
+                      {student.isActive ? t('common.edit') : 'Inattivo'}
                       </Badge>
                     </TableCell>
                     <TableCell>

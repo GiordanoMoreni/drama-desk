@@ -15,6 +15,7 @@ import {
   Home,
   Building
 } from 'lucide-react';
+import { t } from '@/lib/translations';
 
 interface DashboardNavProps {
   organizationName: string;
@@ -29,11 +30,11 @@ interface DashboardNavProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Students', href: '/dashboard/students', icon: Users },
-  { name: 'Classes', href: '/dashboard/classes', icon: Calendar },
-  { name: 'Shows', href: '/dashboard/shows', icon: Theater },
-  { name: 'Organization', href: '/dashboard/organization', icon: Building },
+  { name: t('dashboard.title'), href: '/dashboard', icon: Home },
+  { name: t('students.title'), href: '/dashboard/students', icon: Users },
+  { name: t('classes.title'), href: '/dashboard/classes', icon: Calendar },
+  { name: t('shows.title'), href: '/dashboard/shows', icon: Theater },
+  { name: t('organizations.organizationName'), href: '/dashboard/organization', icon: Building },
 ];
 
 export default function DashboardNav({
@@ -161,7 +162,7 @@ export default function DashboardNav({
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="flex items-center justify-between w-full"
           >
-            <span className="text-sm font-medium">Menu</span>
+            <span className="text-sm font-medium">{t('common.next').toLowerCase()}</span>
             <ChevronDown className={`h-4 w-4 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`} />
           </button>
         </div>
