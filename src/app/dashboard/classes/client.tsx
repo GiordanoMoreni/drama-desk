@@ -61,15 +61,16 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
 
   const fetchTeachers = async () => {
     try {
-      // For now, we'll fetch organization members with teacher/staff roles
-      // This should be replaced with a proper API endpoint
+      // Fetch organization members with teacher/staff/admin roles
       const response = await fetch('/api/organizations/members');
       if (!response.ok) throw new Error('Failed to fetch teachers');
 
       const data = await response.json();
-      setTeachers(data.filter((member: OrganizationMember) =>
-        member.role === 'teacher' || member.role === 'staff'
-      ));
+      const filteredTeachers = data.filter((member: OrganizationMember) =>
+        member.role === 'teacher' || member.role === 'staff' || member.role === 'admin'
+      );
+      console.log('Fetched teachers:', filteredTeachers);
+      setTeachers(filteredTeachers);
     } catch (error) {
       console.error('Error fetching teachers:', error);
       // For demo purposes, we'll use empty array
@@ -324,9 +325,9 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
               organizationId={organizationId}
               teachers={teachers.map(t => ({
                 id: t.id,
-                firstName: 'Teacher', // This should be fetched from auth users
-                lastName: t.id,
-                email: 'teacher@example.com', // This should be fetched from auth users
+                firstName: t.firstName || '',
+                lastName: t.lastName || '',
+                email: t.email || '',
               }))}
             />
           )}

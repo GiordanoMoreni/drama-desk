@@ -31,12 +31,12 @@ interface DashboardNavProps {
   }>;
 }
 
-const navigation = [
+const getNavigation = (organizationName: string) => [
   { name: t('dashboard.title'), href: '/dashboard', icon: Home },
   { name: t('students.title'), href: '/dashboard/students', icon: Users },
   { name: t('classes.title'), href: '/dashboard/classes', icon: Calendar },
   { name: t('shows.title'), href: '/dashboard/shows', icon: Theater },
-  { name: t('organizations.organizationName'), href: '/dashboard/organization', icon: Building },
+  { name: organizationName, href: '/dashboard/organization', icon: Building },
 ];
 
 export default function DashboardNav({
@@ -185,7 +185,7 @@ export default function DashboardNav({
           <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex-1 px-2 space-y-1">
-                {navigation.map((item) => {
+                {getNavigation(organizationName).map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -226,7 +226,7 @@ export default function DashboardNav({
         {isMobileMenuOpen && (
           <div className="md:hidden fixed top-24 left-0 right-0 z-40 bg-white border-b border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigation.map((item) => {
+              {getNavigation(organizationName).map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
