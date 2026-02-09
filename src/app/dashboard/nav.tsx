@@ -39,7 +39,7 @@ const getNavigation = (organizationName: string, organizationId?: string) => {
     { name: t('students.title'), href: `${baseHref}/students`, icon: Users },
     { name: t('classes.title'), href: `${baseHref}/classes`, icon: Calendar },
     { name: t('shows.title'), href: `${baseHref}/shows`, icon: Theater },
-    { name: organizationName, href: `${baseHref}/organization`, icon: Building },
+    { name: t('organizations.title'), href: `${baseHref}/organization`, icon: Building },
   ];
 };
 
