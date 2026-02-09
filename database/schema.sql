@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Organizations (Tenants)
-CREATE TABLE organizations (
+CREATE TABLE IF NOT EXISTS organizations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(100) UNIQUE NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE organizations (
 );
 
 -- Organization Members (Users belonging to organizations)
-CREATE TABLE organization_members (
+CREATE TABLE IF NOT EXISTS organization_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     user_id UUID NOT NULL, -- Supabase Auth user ID
@@ -38,7 +38,7 @@ CREATE TABLE organization_members (
 );
 
 -- Students
-CREATE TABLE students (
+CREATE TABLE IF NOT EXISTS students (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE students (
 );
 
 -- Classes
-CREATE TABLE classes (
+CREATE TABLE IF NOT EXISTS classes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE classes (
 );
 
 -- Class Enrollments
-CREATE TABLE class_enrollments (
+CREATE TABLE IF NOT EXISTS class_enrollments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     class_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
@@ -87,7 +87,7 @@ CREATE TABLE class_enrollments (
 );
 
 -- Shows
-CREATE TABLE shows (
+CREATE TABLE IF NOT EXISTS shows (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE shows (
 );
 
 -- Roles (Character roles in shows)
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     show_id UUID NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
@@ -117,7 +117,7 @@ CREATE TABLE roles (
 );
 
 -- Castings (Student assignments to roles)
-CREATE TABLE castings (
+CREATE TABLE IF NOT EXISTS castings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
@@ -129,18 +129,18 @@ CREATE TABLE castings (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_organization_members_org_user ON organization_members(organization_id, user_id);
-CREATE INDEX idx_organization_members_user ON organization_members(user_id);
-CREATE INDEX idx_students_org_name ON students(organization_id, last_name, first_name);
-CREATE INDEX idx_classes_org_teacher ON classes(organization_id, teacher_id);
-CREATE INDEX idx_classes_org_active ON classes(organization_id, is_active);
-CREATE INDEX idx_class_enrollments_class ON class_enrollments(class_id);
-CREATE INDEX idx_class_enrollments_student ON class_enrollments(student_id);
-CREATE INDEX idx_shows_org_director ON shows(organization_id, director_id);
-CREATE INDEX idx_shows_org_status ON shows(organization_id, status);
-CREATE INDEX idx_roles_show ON roles(show_id);
-CREATE INDEX idx_castings_role ON castings(role_id);
-CREATE INDEX idx_castings_student ON castings(student_id);
+CREATE INDEX IF NOT EXISTS idx_organization_members_org_user ON organization_members(organization_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_organization_members_user ON organization_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_students_org_name ON students(organization_id, last_name, first_name);
+CREATE INDEX IF NOT EXISTS idx_classes_org_teacher ON classes(organization_id, teacher_id);
+CREATE INDEX IF NOT EXISTS idx_classes_org_active ON classes(organization_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_class_enrollments_class ON class_enrollments(class_id);
+CREATE INDEX IF NOT EXISTS idx_class_enrollments_student ON class_enrollments(student_id);
+CREATE INDEX IF NOT EXISTS idx_shows_org_director ON shows(organization_id, director_id);
+CREATE INDEX IF NOT EXISTS idx_shows_org_status ON shows(organization_id, status);
+CREATE INDEX IF NOT EXISTS idx_roles_show ON roles(show_id);
+CREATE INDEX IF NOT EXISTS idx_castings_role ON castings(role_id);
+CREATE INDEX IF NOT EXISTS idx_castings_student ON castings(student_id);
 
 -- Updated at triggers
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -150,6 +150,12 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_organizations_updated_at ON organizations;
+DROP TRIGGER IF EXISTS update_students_updated_at ON students;
+DROP TRIGGER IF EXISTS update_classes_updated_at ON classes;
+DROP TRIGGER IF EXISTS update_shows_updated_at ON shows;
+DROP TRIGGER IF EXISTS update_roles_updated_at ON roles;
 
 CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
