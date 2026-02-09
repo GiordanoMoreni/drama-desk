@@ -1,5 +1,7 @@
  'use server';
 
+export const dynamic = 'force-dynamic';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Users, UserPlus, Activity } from 'lucide-react';
