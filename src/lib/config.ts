@@ -26,6 +26,8 @@ export const config = {
   },
   app: {
     url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    defaultLocale: 'it', // Default language: Italian
+    supportedLocales: ['it', 'en'] as const,
   },
 } as const;
 

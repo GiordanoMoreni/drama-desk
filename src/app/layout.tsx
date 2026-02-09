@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Drama Desk - Theatre Management System",
-  description: "Multi-tenant theatre association management system",
+  title: "Drama Desk - Sistema di Gestione Teatrale",
+  description: "Sistema di gestione multi-tenant per associazioni teatrali",
 };
 
 export default function RootLayout({
@@ -24,10 +24,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="it">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Set Italian as default locale in browser
+              if (!localStorage.getItem('NEXT_LOCALE')) {
+                localStorage.setItem('NEXT_LOCALE', 'it');
+              }
+            `,
+          }}
+        />
         {children}
         <Toaster />
       </body>
