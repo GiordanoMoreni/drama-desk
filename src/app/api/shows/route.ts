@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrganization } from '@/lib/auth';
 import { getServices } from '@/lib/di';
 import { CreateShowFormData } from '@/lib/validations/show';
+import { ShowStaffAssignmentFormData } from '@/lib/validations/staff';
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +40,10 @@ export async function POST(request: NextRequest) {
   try {
     const { organization } = await requireOrganization();
 
-    const body: CreateShowFormData & { organizationId: string } = await request.json();
+    const body: CreateShowFormData & {
+      organizationId: string;
+      staffAssignments?: ShowStaffAssignmentFormData[];
+    } = await request.json();
 
     // Validate that the organization ID matches
     if (body.organizationId !== organization.organizationId) {
@@ -49,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { organizationId, ...showData } = body;
+    const { organizationId, staffAssignments, ...showData } = body;
 
     // Convert dates from strings to Date objects
     const processedShowData = {
@@ -61,6 +65,9 @@ export async function POST(request: NextRequest) {
     const services = await getServices();
 
     const show = await services.showService.createShow(processedShowData, organizationId);
+    if (staffAssignments) {
+      await services.staffService.replaceShowAssignments(organizationId, show.id, staffAssignments);
+    }
 
     return NextResponse.json(show, { status: 201 });
   } catch (error) {

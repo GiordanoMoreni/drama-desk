@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrganization } from '@/lib/auth';
 import { getServices } from '@/lib/di';
 import { UpdateShowFormData } from '@/lib/validations/show';
+import { ShowStaffAssignmentFormData } from '@/lib/validations/staff';
 
 export async function GET(
   request: NextRequest,
@@ -22,7 +23,16 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(show);
+    let staffAssignments: ShowStaffAssignmentFormData[] = [];
+    try {
+      staffAssignments = await services.staffService.getShowAssignments(organization.organizationId, showId);
+    } catch (staffError) {
+      // Keep show editing available even if staff assignment storage is not ready yet.
+      console.warn('Error fetching show staff assignments:', staffError);
+      staffAssignments = [];
+    }
+
+    return NextResponse.json({ ...show, staffAssignments });
   } catch (error) {
     console.error('Error fetching show:', error);
     return NextResponse.json(
@@ -40,7 +50,7 @@ export async function PUT(
     const { organization } = await requireOrganization();
     const { id: showId } = await params;
 
-    const body: UpdateShowFormData = await request.json();
+    const body: UpdateShowFormData & { staffAssignments?: ShowStaffAssignmentFormData[] } = await request.json();
 
     // Convert dates from strings to Date objects
     const processedBody = {
@@ -57,6 +67,14 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Show not found' },
         { status: 404 }
+      );
+    }
+
+    if (body.staffAssignments !== undefined) {
+      await services.staffService.replaceShowAssignments(
+        organization.organizationId,
+        showId,
+        body.staffAssignments
       );
     }
 
