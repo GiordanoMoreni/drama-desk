@@ -75,8 +75,14 @@ export function ProfileClient() {
             <Input value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <Label>Nuova password</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Label>Nuova password <span className="text-sm text-gray-500">(opzionale)</span></Label>
+            <Input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Lascia vuoto se non vuoi cambiarla"
+              autoComplete="new-password"
+            />
           </div>
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={isLoading}>{isLoading ? 'Salvando...' : 'Salva'}</Button>

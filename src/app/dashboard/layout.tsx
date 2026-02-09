@@ -31,7 +31,7 @@ export default async function DashboardLayout({
                 <span className="text-sm font-medium">Admin Access</span>
               </div>
               <Link href="/admin">
-                <Button variant="secondary" size="sm">
+                <Button variant="secondary" size="sm" className="cursor-pointer">
                   Admin Panel
                 </Button>
               </Link>

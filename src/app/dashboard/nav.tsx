@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,9 @@ import {
   ChevronDown,
   LogOut,
   Home,
-  Building
+  Building,
+  User,
+  Settings
 } from 'lucide-react';
 import { t } from '@/lib/translations';
 
@@ -45,6 +47,26 @@ export default function DashboardNav({
 }: DashboardNavProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/profile');
+        if (res.ok) {
+          const data = await res.json();
+          const profile = data.profile || {};
+          setFirstName(profile.first_name || '');
+          setLastName(profile.last_name || '');
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -76,20 +98,21 @@ export default function DashboardNav({
   return (
     <>
       {/* Top Navigation */}
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <Theater className="h-8 w-8 text-blue-600" />
-                <span className="text-xl font-bold text-gray-900">Drama Desk</span>
+      <header className="bg-white border-b sticky top-0 z-50">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 gap-4">
+            {/* Logo e Organization Name */}
+            <div className="flex items-center gap-4 min-w-0">
+              <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                <Theater className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                <span className="text-xl font-bold text-gray-900 hidden sm:inline">Drama Desk</span>
               </Link>
-              <div className="h-6 w-px bg-gray-300" />
+              <div className="h-6 w-px bg-gray-300 hidden sm:block" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
-                    <span className="font-medium">{organizationName}</span>
-                    <ChevronDown className="h-4 w-4" />
+                  <Button variant="ghost" className="flex items-center gap-2 cursor-pointer hidden sm:flex">
+                    <span className="font-medium max-w-[200px] truncate">{organizationName}</span>
+                    <ChevronDown className="h-4 w-4 flex-shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
@@ -97,7 +120,7 @@ export default function DashboardNav({
                     <DropdownMenuItem
                       key={org.organizationId}
                       onClick={() => switchOrganization(org.organizationId)}
-                      className="flex items-center justify-between min-w-[200px]"
+                      className="flex items-center justify-between min-w-[200px] cursor-pointer"
                     >
                       <span>{org.organizationName}</span>
                       <Badge variant={org.userRole === 'admin' ? 'default' : 'secondary'}>
@@ -109,16 +132,48 @@ export default function DashboardNav({
               </DropdownMenu>
             </div>
 
-            <div className="flex items-center space-x-4">
+            {/* User Section */}
+            <div className="flex items-center gap-2 ml-auto">
               <Badge variant={userRole === 'admin' ? 'default' : 'secondary'}>
                 {userRole}
               </Badge>
-              <span className="text-sm text-gray-600 hidden sm:block">
-                {userEmail}
-              </span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              
+              {/* User Dropdown Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 cursor-pointer">
+                    <User className="h-4 w-4" />
+                    <span className="text-sm text-gray-600 hidden sm:inline truncate max-w-[150px]">
+                      {firstName && lastName ? `${firstName} ${lastName}` : userEmail}
+                    </span>
+                    <ChevronDown className="h-4 w-4 hidden sm:inline" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {(firstName || lastName) && (
+                    <>
+                      <DropdownMenuItem disabled className="text-sm font-medium text-gray-900">
+                        {firstName} {lastName}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuItem disabled className="text-xs text-gray-500">
+                    {userEmail}
+                  </DropdownMenuItem>
+                  <div className="my-1 h-px bg-gray-200" />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/profile" className="cursor-pointer flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      <span>Il mio profilo</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <div className="my-1 h-px bg-gray-200" />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span>Esci</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
