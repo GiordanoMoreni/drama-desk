@@ -1,39 +1,48 @@
-import { requireAuth, getUserOrganizations } from '@/lib/auth';
+import { requireAuth, getUserOrganizations, getCurrentOrganization } from '@/lib/auth';
 import DashboardNav from '../nav';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Shield } from 'lucide-react';
-import { redirect } from 'next/navigation';
-import { SetCurrentOrganization } from '@/components/set-current-organization';
+import { Shield, AlertCircle } from 'lucide-react';
 
-interface DashboardOrgLayoutProps {
+interface ShowsLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ organizationId: string }>;
 }
 
-export default async function DashboardOrgLayout({
+export default async function ShowsLayout({
   children,
-  params,
-}: DashboardOrgLayoutProps) {
+}: ShowsLayoutProps) {
   const user = await requireAuth();
-  const { organizationId } = await params;
   const userOrganizations = await getUserOrganizations(user.id);
+  const currentOrg = await getCurrentOrganization();
 
-  // Find the current organization
-  const currentOrg = userOrganizations.find(org => org.organizationId === organizationId);
-
+  // If no organization is selected, show a warning
   if (!currentOrg) {
-    redirect('/dashboard');
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto p-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="h-6 w-6 text-yellow-600" />
+              <h3 className="text-lg font-semibold text-yellow-900">Seleziona un'organizzazione</h3>
+            </div>
+            <p className="text-yellow-700 text-sm mb-4">
+              Devi selezionare un'organizzazione prima di accedere a questa pagina.
+            </p>
+            <Link href="/dashboard">
+              <Button className="w-full">
+                Vai alla selezione organizzazioni
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Set the current organization in cookies (client-side) */}
-      <SetCurrentOrganization organizationId={organizationId} />
-
       <DashboardNav
         organizationName={currentOrg.organizationName}
-        organizationId={organizationId}
         userEmail={user.email}
         userRole={currentOrg.userRole}
         userOrganizations={userOrganizations}

@@ -21,6 +21,7 @@ import { t } from '@/lib/translations';
 
 interface DashboardNavProps {
   organizationName: string;
+  organizationId?: string;
   userEmail: string;
   userRole: 'admin' | 'teacher' | 'staff';
   userOrganizations: Array<{
@@ -31,16 +32,20 @@ interface DashboardNavProps {
   }>;
 }
 
-const getNavigation = (organizationName: string) => [
-  { name: t('dashboard.title'), href: '/dashboard', icon: Home },
-  { name: t('students.title'), href: '/dashboard/students', icon: Users },
-  { name: t('classes.title'), href: '/dashboard/classes', icon: Calendar },
-  { name: t('shows.title'), href: '/dashboard/shows', icon: Theater },
-  { name: organizationName, href: '/dashboard/organization', icon: Building },
-];
+const getNavigation = (organizationName: string, organizationId?: string) => {
+  const baseHref = organizationId ? `/dashboard/${organizationId}` : '/dashboard';
+  return [
+    { name: t('dashboard.title'), href: baseHref, icon: Home },
+    { name: t('students.title'), href: `${baseHref}/students`, icon: Users },
+    { name: t('classes.title'), href: `${baseHref}/classes`, icon: Calendar },
+    { name: t('shows.title'), href: `${baseHref}/shows`, icon: Theater },
+    { name: organizationName, href: `${baseHref}/organization`, icon: Building },
+  ];
+};
 
 export default function DashboardNav({
   organizationName,
+  organizationId,
   userEmail,
   userRole,
   userOrganizations,
@@ -89,10 +94,9 @@ export default function DashboardNav({
     }
   };
 
-  const switchOrganization = (organizationId: string) => {
-    // This would typically be handled by a server action
-    // For now, we'll use window.location which is allowed in client components
-    window.location.href = `/organizations/switch?org=${organizationId}`;
+  const switchOrganization = (newOrgId: string) => {
+    // Navigate to the new organization's dashboard
+    window.location.href = `/dashboard/${newOrgId}`;
   };
 
   return (
@@ -185,7 +189,7 @@ export default function DashboardNav({
           <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex-1 px-2 space-y-1">
-                {getNavigation(organizationName).map((item) => {
+                {getNavigation(organizationName, organizationId).map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -226,7 +230,7 @@ export default function DashboardNav({
         {isMobileMenuOpen && (
           <div className="md:hidden fixed top-24 left-0 right-0 z-40 bg-white border-b border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {getNavigation(organizationName).map((item) => {
+              {getNavigation(organizationName, organizationId).map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
