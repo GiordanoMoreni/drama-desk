@@ -25,7 +25,12 @@ export async function GET(
 
     let staffAssignments: ShowStaffAssignmentFormData[] = [];
     try {
-      staffAssignments = await services.staffService.getShowAssignments(organization.organizationId, showId);
+      const assignments = await services.staffService.getShowAssignments(organization.organizationId, showId);
+      staffAssignments = assignments.map((assignment) => ({
+        staffMemberId: assignment.staffMemberId,
+        role: assignment.role,
+        notes: assignment.notes,
+      }));
     } catch (staffError) {
       // Keep show editing available even if staff assignment storage is not ready yet.
       console.warn('Error fetching show staff assignments:', staffError);

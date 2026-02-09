@@ -29,7 +29,7 @@ export function StaffForm({ initialData, onSubmit, isLoading }: StaffFormProps) 
     watch,
     reset,
     formState: { errors },
-  } = useForm<CreateStaffFormData | UpdateStaffFormData>({
+  } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       firstName: initialData?.firstName || '',

@@ -14,23 +14,6 @@ import { Show } from '@/domain/entities';
 import { STAFF_ROLE_OPTIONS, getStaffRoleLabel } from '@/lib/staff-roles';
 import { t } from '@/lib/translations';
 
-type ShowFormValues = {
-  title: string;
-  description?: string;
-  directorId?: string;
-  startDate?: string;
-  endDate?: string;
-  venue?: string;
-  budget?: number;
-  status?: 'planning' | 'rehearsing' | 'performing' | 'completed' | 'cancelled';
-  isActive?: boolean;
-  staffAssignments: Array<{
-    staffMemberId: string;
-    role: (typeof STAFF_ROLE_OPTIONS)[number]['value'];
-    notes?: string;
-  }>;
-};
-
 interface ShowFormStaffMember {
   id: string;
   firstName: string;
@@ -69,7 +52,7 @@ export function ShowForm({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<ShowFormValues>({
+  } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       title: initialData?.title || '',
@@ -87,7 +70,11 @@ export function ShowForm({
     },
   });
 
-  const selectedAssignments = watch('staffAssignments') || [];
+  const selectedAssignments = (watch('staffAssignments') || []) as Array<{
+    staffMemberId: string;
+    role: (typeof STAFF_ROLE_OPTIONS)[number]['value'];
+    notes?: string;
+  }>;
 
   const onFormSubmit = async (data: CreateShowFormData | UpdateShowFormData) => {
     await onSubmit(data);
@@ -198,7 +185,7 @@ export function ShowForm({
             {isEditing && (
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select value={watch('status') || ''} onValueChange={(value) => setValue('status', value as ShowFormValues['status'])}>
+                <Select value={watch('status') || ''} onValueChange={(value) => setValue('status', value as UpdateShowFormData['status'])}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -210,7 +197,9 @@ export function ShowForm({
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.status && <p className="text-sm text-red-600 mt-1">{errors.status.message}</p>}
+                {'status' in errors && errors.status && (
+                  <p className="text-sm text-red-600 mt-1">{errors.status.message as string}</p>
+                )}
               </div>
             )}
           </CardContent>
@@ -257,7 +246,7 @@ export function ShowForm({
                       <Select
                         value={assignment?.role || member.primaryRole}
                         disabled={!isSelected}
-                        onValueChange={(role) => updateStaffAssignmentRole(member.id, role as ShowFormValues['staffAssignments'][number]['role'])}
+                        onValueChange={(role) => updateStaffAssignmentRole(member.id, role as (typeof STAFF_ROLE_OPTIONS)[number]['value'])}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Ruolo nello spettacolo" />
