@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { requireOrganization } from '@/lib/auth';
 import { ClassesPageClient } from './client';
 
