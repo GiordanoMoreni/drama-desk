@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Organization } from '@/domain/entities';
+import { useState, useEffect } from 'react';
+import { Organization, OrganizationMember } from '@/domain/entities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Mail, Phone, MapPin, Edit, X, Check } from 'lucide-react';
+import { Building2, Mail, Phone, MapPin, Edit, X, Check, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { t } from '@/lib/translations';
@@ -23,6 +23,27 @@ export function OrganizationPageClient({ organization, isAdmin }: OrganizationPa
   const [isLoading, setIsLoading] = useState(false);
   const [editName, setEditName] = useState(organization.name);
   const [editDescription, setEditDescription] = useState(organization.description || '');
+  const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(true);
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const fetchMembers = async () => {
+    try {
+      setIsLoadingMembers(true);
+      const response = await fetch('/api/organizations/members');
+      if (response.ok) {
+        const data = await response.json();
+        setMembers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    } finally {
+      setIsLoadingMembers(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -235,6 +256,39 @@ export function OrganizationPageClient({ organization, isAdmin }: OrganizationPa
           </CardContent>
         </Card>
       )}
+
+      {/* Teachers/Members Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Insegnanti e Staff
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingMembers ? (
+            <p className="text-gray-500">{t('common.loading')}</p>
+          ) : members.length === 0 ? (
+            <p className="text-gray-500">Nessun insegnante o staff assegnato</p>
+          ) : (
+            <div className="space-y-3">
+              {members.map(member => (
+                <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-900">{member.userId}</p>
+                    <Badge variant={member.role === 'admin' ? 'default' : member.role === 'teacher' ? 'secondary' : 'outline'}>
+                      {member.role === 'admin' ? 'Admin' : member.role === 'teacher' ? 'Insegnante' : 'Staff'}
+                    </Badge>
+                  </div>
+                  <Badge variant={member.isActive ? 'default' : 'secondary'}>
+                    {member.isActive ? 'Attivo' : 'Inattivo'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Metadata */}
       <Card>
