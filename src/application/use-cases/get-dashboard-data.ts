@@ -36,29 +36,55 @@ export class GetDashboardDataUseCase {
   ) {}
 
   async execute(organizationId: string): Promise<DashboardData> {
-    // Get student statistics
-    const studentStats = await this.studentService.getStudentStats(organizationId);
+    console.log('=== DASHBOARD USE CASE DEBUG ===');
+    console.log('Organization ID:', organizationId);
 
-    // Get class statistics
-    const activeClasses = await this.classService.getActiveClasses(organizationId);
-    const classStats = await this.calculateClassStats(organizationId, activeClasses);
+    try {
+      // Get student statistics
+      console.log('Getting student statistics...');
+      const studentStats = await this.studentService.getStudentStats(organizationId);
+      console.log('Student stats retrieved:', studentStats);
 
-    // Get show statistics
-    const activeShows = await this.showService.getActiveShows(organizationId);
-    const showStats = await this.getShowStats(activeShows);
+      // Get class statistics
+      console.log('Getting active classes...');
+      const activeClasses = await this.classService.getActiveClasses(organizationId);
+      console.log('Active classes retrieved:', activeClasses.length);
 
-    // Get recent activity
-    const recentActivity = await this.getRecentActivity(organizationId);
+      console.log('Calculating class stats...');
+      const classStats = await this.calculateClassStats(organizationId, activeClasses);
+      console.log('Class stats calculated:', classStats);
 
-    return {
-      totalStudents: studentStats.totalActive,
-      activeClasses: activeClasses.length,
-      upcomingShows: activeShows.length,
-      studentStats,
-      classStats,
-      showStats,
-      recentActivity,
-    };
+      // Get show statistics
+      console.log('Getting active shows...');
+      const activeShows = await this.showService.getActiveShows(organizationId);
+      console.log('Active shows retrieved:', activeShows.length);
+
+      console.log('Getting show stats...');
+      const showStats = await this.getShowStats(activeShows);
+      console.log('Show stats calculated:', showStats);
+
+      // Get recent activity
+      console.log('Getting recent activity...');
+      const recentActivity = await this.getRecentActivity(organizationId);
+      console.log('Recent activity retrieved:', recentActivity.length);
+
+      console.log('=== DASHBOARD USE CASE COMPLETED ===');
+
+      return {
+        totalStudents: studentStats.totalActive,
+        activeClasses: activeClasses.length,
+        upcomingShows: activeShows.length,
+        studentStats,
+        classStats,
+        showStats,
+        recentActivity,
+      };
+    } catch (error) {
+      console.error('=== DASHBOARD USE CASE ERROR ===');
+      console.error('Error in dashboard use case:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      throw error;
+    }
   }
 
   private async calculateClassStats(organizationId: string, activeClasses: any[]) {

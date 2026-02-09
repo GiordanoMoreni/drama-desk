@@ -22,63 +22,30 @@ export interface OrganizationContext {
 // Get the current authenticated user
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
-    // Get cookies once for both admin check and Supabase session
     const cookieStore = await cookies();
-
-    // Check for admin testing session first
     const adminSession = cookieStore.get('admin-session')?.value;
+
     if (adminSession) {
-      console.log('Found admin session, returning admin user');
       return {
         id: 'admin-test-user',
         email: 'admin@test.drama-desk.com',
-        user_metadata: {
-          full_name: 'Admin User',
-        },
+        user_metadata: { full_name: 'Admin User' }
       };
     }
 
-    console.log('Checking Supabase session...');
-
-    // Debug: check for Supabase cookies
-    const allCookies = cookieStore.getAll();
-    console.log('All cookies:', allCookies.map(c => c.name));
-
-    const supabaseCookies = allCookies.filter(c => c.name.startsWith('sb-'));
-    console.log('Supabase cookies found:', supabaseCookies.length);
-
-    // Create a simple Supabase client with explicit cookie handling
-    const supabase = createSupabaseServerClient(config.supabase.url, config.supabase.anonKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {
-          // Not needed for reading session
-        },
-      },
-    });
-
+    const supabase = await createServerClient();
     const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (error) {
-      console.error('Supabase session error:', error);
+    if (error || !session?.user) {
       return null;
     }
 
-    if (!session?.user) {
-      console.log('No Supabase session found');
-      return null;
-    }
-
-    console.log('Found Supabase user:', session.user.email);
     return {
       id: session.user.id,
       email: session.user.email!,
-      user_metadata: session.user.user_metadata,
+      user_metadata: session.user.user_metadata
     };
   } catch (error) {
-    console.error('Error getting current user:', error);
     return null;
   }
 }
@@ -198,6 +165,11 @@ export async function setCurrentOrganization(organizationId: string) {
 export async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) {
+    // In API routes, throw an error instead of redirect
+    if (typeof window === 'undefined') {
+      throw new Error('Authentication required');
+    }
+    // In client components, redirect
     redirect('/login');
   }
   return user;
@@ -210,7 +182,11 @@ export async function requireOrganization() {
 
   if (!organization) {
     // User is authenticated but hasn't selected an organization
-    // Redirect to organization selector
+    // In API routes, throw an error instead of redirect
+    if (typeof window === 'undefined') {
+      throw new Error('Organization selection required');
+    }
+    // In client components, redirect
     redirect('/organizations/select');
   }
 

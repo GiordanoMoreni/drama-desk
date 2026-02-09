@@ -2,13 +2,31 @@ import { createClient } from '@supabase/supabase-js';
 import { createBrowserClient as createBrowserClientSSR } from '@supabase/ssr';
 import { config } from '@/lib/config';
 
-// Use configuration from config file
-const supabaseUrl = config.supabase.url;
-const supabaseAnonKey = config.supabase.anonKey;
-const supabaseServiceRoleKey = config.supabase.serviceRoleKey;
-
 // Client-side Supabase client (safe for browser)
 export function createBrowserClient() {
+  // Read config at function call time, not module load time
+  const supabaseUrl = config.supabase.url;
+  const supabaseAnonKey = config.supabase.anonKey;
+
+  // Validate configuration only when function is called
+  if (!supabaseUrl || !supabaseAnonKey) {
+    const missingVars = [];
+    if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!supabaseAnonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    
+    throw new Error(
+      `Missing required environment variables: ${missingVars.join(', ')}\n\n` +
+      `Please check your .env.local file and ensure these variables are set.\n` +
+      `If you just created .env.local, you need to restart your Next.js dev server.\n\n` +
+      `Expected format in .env.local:\n` +
+      `NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co\n` +
+      `NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key\n\n` +
+      `Current values:\n` +
+      `NEXT_PUBLIC_SUPABASE_URL=${supabaseUrl || '(empty)'}\n` +
+      `NEXT_PUBLIC_SUPABASE_ANON_KEY=${supabaseAnonKey ? '(set)' : '(empty)'}`
+    );
+  }
+
   return createBrowserClientSSR(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
