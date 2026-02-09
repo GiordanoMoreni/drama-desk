@@ -6,7 +6,7 @@ import { CreateShowFormData, UpdateShowFormData } from '@/lib/validations/show';
 import { ShowForm } from '@/components/forms/show-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -182,6 +182,7 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogTitle>{t('shows.addNewShow')}</DialogTitle>
             <ShowForm
               onSubmit={handleCreateShow}
               isLoading={isLoading}
@@ -331,6 +332,7 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
       {/* Edit Dialog */}
       <Dialog open={!!editingShow} onOpenChange={() => setEditingShow(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogTitle>{t('shows.editShow')}</DialogTitle>
           {editingShow && (
             <ShowForm
               initialData={editingShow}

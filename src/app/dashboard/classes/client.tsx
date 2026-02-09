@@ -6,7 +6,7 @@ import { CreateClassFormData, UpdateClassFormData } from '@/lib/validations/clas
 import { ClassForm } from '@/components/forms/class-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -180,6 +180,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogTitle>{t('classes.addNewClass')}</DialogTitle>
             <ClassForm
               onSubmit={handleCreateClass}
               isLoading={isLoading}
@@ -314,6 +315,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
       {/* Edit Dialog */}
       <Dialog open={!!editingClass} onOpenChange={() => setEditingClass(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogTitle>{t('classes.editClass')}</DialogTitle>
           {editingClass && (
             <ClassForm
               initialData={editingClass}

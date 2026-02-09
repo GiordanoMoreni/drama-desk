@@ -8,7 +8,7 @@ import { CreateStudentFormData } from '@/lib/validations/student';
 import { StudentForm } from '@/components/forms/student-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Mail, Phone } from 'lucide-react';
@@ -106,6 +106,7 @@ export function StudentsPageClient({ initialStudents, organizationId }: Students
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogTitle>{t('students.addNewStudent')}</DialogTitle>
             <StudentForm
               onSubmit={handleCreateStudent}
               isLoading={isLoading}
