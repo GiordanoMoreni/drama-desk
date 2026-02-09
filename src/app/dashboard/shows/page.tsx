@@ -1,3 +1,7 @@
+export const dynamic = 'force-dynamic';
+
+export const dynamic = 'force-dynamic';
+
 import { requireOrganization } from '@/lib/auth';
 import { ShowsPageClient } from './client';
 

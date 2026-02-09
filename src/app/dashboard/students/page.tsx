@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { requireOrganization } from '@/lib/auth';
 import { getStudentRepository } from '@/lib/di';
 import { StudentService } from '@/application/services/student-service';
