@@ -1,22 +1,54 @@
+ 'use server';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Users, UserPlus, Activity } from 'lucide-react';
+import { requireAuth } from '@/lib/auth';
+import { getAdminServices } from '@/lib/di';
 
-// Fetch real admin dashboard data
+// Server-side admin dashboard data (avoids using NEXT_PUBLIC_APP_URL)
 async function getAdminDashboardData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/dashboard`, {
-      cache: 'no-store', // Always fetch fresh data
-    });
+    // Ensure user is authenticated for admin access
+    await requireAuth();
 
-    if (!response.ok) {
-      console.error('Failed to fetch admin dashboard data:', response.statusText);
-      return null;
-    }
+    // For now return the same mock data as the api route; later we can
+    // call admin services from `getAdminServices()` to fetch real metrics.
+    const services = await getAdminServices(); // reserved for future use
 
-    return await response.json();
+    const dashboardData = {
+      totalOrganizations: 5,
+      totalUsers: 23,
+      pendingInvitations: 2,
+      activeSessions: 8,
+      recentActivity: [
+        {
+          id: '1',
+          action: 'Organization Created',
+          details: 'Springfield Community Theatre',
+          user: 'admin@drama-desk.com',
+          timestamp: new Date().toLocaleString(),
+        },
+        {
+          id: '2',
+          action: 'User Invited',
+          details: 'john.doe@example.com → Downtown Players',
+          user: 'admin@drama-desk.com',
+          timestamp: new Date(Date.now() - 3600000).toLocaleString(), // 1 hour ago
+        },
+        {
+          id: '3',
+          action: 'Class Created',
+          details: 'Advanced Acting Class',
+          user: 'manager@riverside.com',
+          timestamp: new Date(Date.now() - 7200000).toLocaleString(), // 2 hours ago
+        },
+      ],
+    };
+
+    return dashboardData;
   } catch (error) {
-    console.error('Error fetching admin dashboard data:', error);
+    console.error('Failed to get admin dashboard data:', error);
     return null;
   }
 }
