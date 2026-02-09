@@ -27,6 +27,9 @@ export interface OrganizationMemberRow {
   invited_at: string;
   joined_at: string | null;
   invited_by: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
 }
 
 export interface StudentRow {

@@ -275,8 +275,13 @@ export function OrganizationPageClient({ organization, isAdmin }: OrganizationPa
               {members.map(member => (
                 <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-900">{member.userId}</p>
-                    <Badge variant={member.role === 'admin' ? 'default' : member.role === 'teacher' ? 'secondary' : 'outline'}>
+                    <p className="font-medium text-gray-900">
+                      {member.firstName && member.lastName ? `${member.firstName} ${member.lastName}` : member.email || member.userId}
+                    </p>
+                    {member.email && (
+                      <p className="text-sm text-gray-600">{member.email}</p>
+                    )}
+                    <Badge className="mt-2" variant={member.role === 'admin' ? 'default' : member.role === 'teacher' ? 'secondary' : 'outline'}>
                       {member.role === 'admin' ? 'Admin' : member.role === 'teacher' ? 'Insegnante' : 'Staff'}
                     </Badge>
                   </div>

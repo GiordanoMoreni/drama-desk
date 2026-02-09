@@ -25,6 +25,9 @@ export interface OrganizationMember {
   invitedAt: Date;
   joinedAt?: Date;
   invitedBy?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 export interface CreateOrganizationData {

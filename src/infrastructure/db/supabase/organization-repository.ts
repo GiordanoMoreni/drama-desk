@@ -213,7 +213,10 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   async getMembers(organizationId: string): Promise<OrganizationMember[]> {
     const { data, error } = await this.supabase
       .from('organization_members')
-      .select('*')
+      .select(`
+        *,
+        user_profiles(first_name, last_name, email)
+      `)
       .eq('organization_id', organizationId)
       .order('invited_at');
 
@@ -274,7 +277,9 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
     };
   }
 
-  private mapOrganizationMemberRowToEntity(row: OrganizationMemberRow): OrganizationMember {
+  private mapOrganizationMemberRowToEntity(row: any): OrganizationMember {
+    const userProfile = row.user_profiles && !Array.isArray(row.user_profiles) ? row.user_profiles : null;
+    
     return {
       id: row.id,
       organizationId: row.organization_id,
@@ -284,6 +289,9 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
       invitedAt: new Date(row.invited_at),
       joinedAt: row.joined_at ? new Date(row.joined_at) : undefined,
       invitedBy: row.invited_by || undefined,
+      firstName: userProfile?.first_name || row.first_name || undefined,
+      lastName: userProfile?.last_name || row.last_name || undefined,
+      email: userProfile?.email || row.email || undefined,
     };
   }
 
