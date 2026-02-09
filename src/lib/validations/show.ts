@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { staffRoleValues } from './staff';
 
 export const createShowSchema = z.object({
   title: z.string().min(1, 'Show title is required').max(255, 'Show title too long'),
@@ -12,6 +13,11 @@ export const createShowSchema = z.object({
   endDate: z.string().optional().nullable().transform(val => val === null ? undefined : val),
   venue: z.string().optional(),
   budget: z.number().positive().optional().nullable().transform(val => val === null ? undefined : val),
+  staffAssignments: z.array(z.object({
+    staffMemberId: z.string().uuid('Staff member non valido'),
+    role: z.enum(staffRoleValues),
+    notes: z.string().max(1000).optional(),
+  })).optional(),
 }).refine((data) => {
   if (data.startDate && data.endDate) {
     return new Date(data.startDate) <= new Date(data.endDate);
@@ -36,6 +42,11 @@ export const updateShowSchema = z.object({
   budget: z.number().positive().optional().nullable(),
   status: z.enum(['planning', 'rehearsing', 'performing', 'completed', 'cancelled']).optional(),
   isActive: z.boolean().optional(),
+  staffAssignments: z.array(z.object({
+    staffMemberId: z.string().uuid('Staff member non valido'),
+    role: z.enum(staffRoleValues),
+    notes: z.string().max(1000).optional(),
+  })).optional(),
 }).transform((data) => ({
   ...data,
   directorId: data.directorId === null ? undefined : data.directorId,

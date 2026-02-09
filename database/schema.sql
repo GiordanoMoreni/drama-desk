@@ -103,6 +103,60 @@ CREATE TABLE IF NOT EXISTS shows (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Staff members for an organization (teachers, directors, technicians, assistants, etc.)
+CREATE TABLE IF NOT EXISTS staff_members (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    primary_role VARCHAR(50) NOT NULL CHECK (
+      primary_role IN (
+        'insegnante',
+        'regista',
+        'tecnico',
+        'assistente',
+        'drammaturgo',
+        'coreografo',
+        'scenografo',
+        'costumista',
+        'vocal_coach',
+        'movimento_scenico'
+      )
+    ),
+    notes TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Staff assignments for each show
+CREATE TABLE IF NOT EXISTS show_staff_assignments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    show_id UUID NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
+    staff_member_id UUID NOT NULL REFERENCES staff_members(id) ON DELETE CASCADE,
+    role VARCHAR(50) NOT NULL CHECK (
+      role IN (
+        'insegnante',
+        'regista',
+        'tecnico',
+        'assistente',
+        'drammaturgo',
+        'coreografo',
+        'scenografo',
+        'costumista',
+        'vocal_coach',
+        'movimento_scenico'
+      )
+    ),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(show_id, staff_member_id)
+);
+
 -- Roles (Character roles in shows)
 CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -138,6 +192,10 @@ CREATE INDEX IF NOT EXISTS idx_class_enrollments_class ON class_enrollments(clas
 CREATE INDEX IF NOT EXISTS idx_class_enrollments_student ON class_enrollments(student_id);
 CREATE INDEX IF NOT EXISTS idx_shows_org_director ON shows(organization_id, director_id);
 CREATE INDEX IF NOT EXISTS idx_shows_org_status ON shows(organization_id, status);
+CREATE INDEX IF NOT EXISTS idx_staff_members_org_name ON staff_members(organization_id, last_name, first_name);
+CREATE INDEX IF NOT EXISTS idx_staff_members_org_role ON staff_members(organization_id, primary_role);
+CREATE INDEX IF NOT EXISTS idx_show_staff_assignments_show ON show_staff_assignments(show_id);
+CREATE INDEX IF NOT EXISTS idx_show_staff_assignments_staff ON show_staff_assignments(staff_member_id);
 CREATE INDEX IF NOT EXISTS idx_roles_show ON roles(show_id);
 CREATE INDEX IF NOT EXISTS idx_castings_role ON castings(role_id);
 CREATE INDEX IF NOT EXISTS idx_castings_student ON castings(student_id);
@@ -155,10 +213,14 @@ DROP TRIGGER IF EXISTS update_organizations_updated_at ON organizations;
 DROP TRIGGER IF EXISTS update_students_updated_at ON students;
 DROP TRIGGER IF EXISTS update_classes_updated_at ON classes;
 DROP TRIGGER IF EXISTS update_shows_updated_at ON shows;
+DROP TRIGGER IF EXISTS update_staff_members_updated_at ON staff_members;
+DROP TRIGGER IF EXISTS update_show_staff_assignments_updated_at ON show_staff_assignments;
 DROP TRIGGER IF EXISTS update_roles_updated_at ON roles;
 
 CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_classes_updated_at BEFORE UPDATE ON classes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_shows_updated_at BEFORE UPDATE ON shows FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_staff_members_updated_at BEFORE UPDATE ON staff_members FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_show_staff_assignments_updated_at BEFORE UPDATE ON show_staff_assignments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

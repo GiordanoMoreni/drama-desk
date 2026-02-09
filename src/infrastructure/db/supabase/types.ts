@@ -114,3 +114,48 @@ export interface CastingRow {
   status: 'assigned' | 'confirmed' | 'rehearsing' | 'performing' | 'completed';
   notes: string | null;
 }
+
+export interface StaffMemberRow {
+  id: string;
+  organization_id: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  primary_role:
+    | 'insegnante'
+    | 'regista'
+    | 'tecnico'
+    | 'assistente'
+    | 'drammaturgo'
+    | 'coreografo'
+    | 'scenografo'
+    | 'costumista'
+    | 'vocal_coach'
+    | 'movimento_scenico';
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShowStaffAssignmentRow {
+  id: string;
+  organization_id: string;
+  show_id: string;
+  staff_member_id: string;
+  role:
+    | 'insegnante'
+    | 'regista'
+    | 'tecnico'
+    | 'assistente'
+    | 'drammaturgo'
+    | 'coreografo'
+    | 'scenografo'
+    | 'costumista'
+    | 'vocal_coach'
+    | 'movimento_scenico';
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}

@@ -15,7 +15,8 @@ import {
   Home,
   Building,
   User,
-  Settings
+  Settings,
+  Briefcase,
 } from 'lucide-react';
 import { t } from '@/lib/translations';
 
@@ -39,6 +40,7 @@ const getNavigation = (organizationName: string, organizationId?: string) => {
     { name: t('students.title'), href: `${baseHref}/students`, icon: Users },
     { name: t('classes.title'), href: `${baseHref}/classes`, icon: Calendar },
     { name: t('shows.title'), href: `${baseHref}/shows`, icon: Theater },
+    { name: t('staff.title'), href: `${baseHref}/staff`, icon: Briefcase },
     { name: t('organizations.title'), href: `${baseHref}/organization`, icon: Building },
   ];
 };

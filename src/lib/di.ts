@@ -5,6 +5,7 @@ import { createServerClient, createAdminClient } from '../infrastructure/db/supa
 import { SupabaseStudentRepository } from '../infrastructure/db/supabase/student-repository';
 import { SupabaseClassRepository, SupabaseClassEnrollmentRepository } from '../infrastructure/db/supabase/class-repository';
 import { SupabaseShowRepository, SupabaseRoleRepository, SupabaseCastingRepository } from '../infrastructure/db/supabase/show-repository';
+import { SupabaseStaffMemberRepository, SupabaseShowStaffAssignmentRepository } from '../infrastructure/db/supabase/staff-repository';
 import { SupabaseOrganizationRepository } from '../infrastructure/db/supabase/organization-repository';
 import {
   StudentRepository,
@@ -13,13 +14,16 @@ import {
   ShowRepository,
   RoleRepository,
   CastingRepository,
-  OrganizationRepository
+  OrganizationRepository,
+  StaffMemberRepository,
+  ShowStaffAssignmentRepository
 } from '../domain/repositories';
 import {
   StudentService,
   ClassService,
   ShowService,
-  OrganizationService
+  OrganizationService,
+  StaffService
 } from '../application/services/index';
 import { GetDashboardDataUseCase } from '../application/use-cases/get-dashboard-data';
 
@@ -32,6 +36,8 @@ export interface Repositories {
   roleRepository: RoleRepository;
   castingRepository: CastingRepository;
   organizationRepository: OrganizationRepository;
+  staffMemberRepository: StaffMemberRepository;
+  showStaffAssignmentRepository: ShowStaffAssignmentRepository;
 }
 
 // Application services
@@ -40,6 +46,7 @@ export interface ApplicationServices {
   classService: ClassService;
   showService: ShowService;
   organizationService: OrganizationService;
+  staffService: StaffService;
   getDashboardData: GetDashboardDataUseCase;
 }
 
@@ -77,6 +84,8 @@ export class Container {
         roleRepository: new SupabaseRoleRepository(supabase),
         castingRepository: new SupabaseCastingRepository(supabase),
         organizationRepository: new SupabaseOrganizationRepository(supabase),
+        staffMemberRepository: new SupabaseStaffMemberRepository(supabase),
+        showStaffAssignmentRepository: new SupabaseShowStaffAssignmentRepository(supabase),
       };
     }
 
@@ -95,6 +104,8 @@ export class Container {
       roleRepository: new SupabaseRoleRepository(supabase),
       castingRepository: new SupabaseCastingRepository(supabase),
       organizationRepository: new SupabaseOrganizationRepository(supabase),
+      staffMemberRepository: new SupabaseStaffMemberRepository(supabase),
+      showStaffAssignmentRepository: new SupabaseShowStaffAssignmentRepository(supabase),
     };
   }
 
@@ -108,6 +119,7 @@ export class Container {
         classService: new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
         showService: new ShowService(repositories.showRepository, repositories.roleRepository, repositories.castingRepository),
         organizationService: new OrganizationService(repositories.organizationRepository),
+        staffService: new StaffService(repositories.staffMemberRepository, repositories.showStaffAssignmentRepository),
         getDashboardData: new GetDashboardDataUseCase(
           new StudentService(repositories.studentRepository),
           new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
@@ -128,6 +140,7 @@ export class Container {
       classService: new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
       showService: new ShowService(repositories.showRepository, repositories.roleRepository, repositories.castingRepository),
       organizationService: new OrganizationService(repositories.organizationRepository),
+      staffService: new StaffService(repositories.staffMemberRepository, repositories.showStaffAssignmentRepository),
       getDashboardData: new GetDashboardDataUseCase(
         new StudentService(repositories.studentRepository),
         new ClassService(repositories.classRepository, repositories.classEnrollmentRepository),
@@ -177,6 +190,10 @@ export async function getOrganizationRepository(): Promise<OrganizationRepositor
   return (await getRepositories()).organizationRepository;
 }
 
+export async function getStaffRepository(): Promise<StaffMemberRepository> {
+  return (await getRepositories()).staffMemberRepository;
+}
+
 // Export individual services for convenience
 export async function getStudentService(): Promise<StudentService> {
   return (await getServices()).studentService;
@@ -192,4 +209,8 @@ export async function getShowService(): Promise<ShowService> {
 
 export async function getOrganizationService(): Promise<OrganizationService> {
   return (await getServices()).organizationService;
+}
+
+export async function getStaffService(): Promise<StaffService> {
+  return (await getServices()).staffService;
 }

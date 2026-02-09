@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Show, OrganizationMember } from '@/domain/entities';
+import { Show, OrganizationMember, StaffMember } from '@/domain/entities';
 import { CreateShowFormData, UpdateShowFormData } from '@/lib/validations/show';
 import { ShowForm } from '@/components/forms/show-form';
 import { Button } from '@/components/ui/button';
@@ -29,8 +29,9 @@ interface ShowsResponse {
 export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
   const [shows, setShows] = useState<Show[]>([]);
   const [directors, setDirectors] = useState<OrganizationMember[]>([]);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingShow, setEditingShow] = useState<Show | null>(null);
+  const [editingShow, setEditingShow] = useState<(Show & { staffAssignments?: Array<{ staffMemberId: string; role: StaffMember['primaryRole']; notes?: string }> }) | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -39,6 +40,7 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
   useEffect(() => {
     fetchShows();
     fetchDirectors();
+    fetchStaffMembers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, searchTerm, statusFilter]);
 
@@ -67,13 +69,23 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
       if (!response.ok) throw new Error('Failed to fetch directors');
 
       const data = await response.json();
-      setDirectors(data.filter((member: OrganizationMember) =>
-        member.role === 'admin' || member.role === 'teacher'
-      ));
+      setDirectors(data.filter((member: OrganizationMember) => member.role === 'admin' || member.role === 'teacher'));
     } catch (error) {
       console.error('Error fetching directors:', error);
       // For demo purposes, we'll use empty array
       setDirectors([]);
+    }
+  };
+
+  const fetchStaffMembers = async () => {
+    try {
+      const response = await fetch('/api/staff?limit=200');
+      if (!response.ok) throw new Error('Failed to fetch staff members');
+      const data = await response.json();
+      setStaffMembers(data.data || []);
+    } catch (error) {
+      console.error('Error fetching staff members:', error);
+      setStaffMembers([]);
     }
   };
 
@@ -135,6 +147,19 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
     }
   };
 
+  const handleStartEditShow = async (show: Show) => {
+    try {
+      const response = await fetch(`/api/shows/${show.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to load show details');
+      }
+      const detailedShow = await response.json();
+      setEditingShow(detailedShow);
+    } catch {
+      toast.error('Impossibile caricare i dettagli dello spettacolo');
+    }
+  };
+
   const handleDeleteShow = async (showId: string) => {
     if (!confirm(t('common.delete') + '?')) return;
 
@@ -167,6 +192,13 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
     }
   };
 
+  const formatShowDate = (value: unknown): string | null => {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value as string);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleDateString();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -181,18 +213,18 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
               {t('shows.addNewShow')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[98vw] max-w-7xl max-h-[92vh] overflow-y-auto">
             <DialogTitle>{t('shows.addNewShow')}</DialogTitle>
             <ShowForm
               onSubmit={handleCreateShow}
               isLoading={isLoading}
-              organizationId={organizationId}
               directors={directors.map(d => ({
                 id: d.id,
-                firstName: 'Director', // This should be fetched from auth users
-                lastName: d.id,
-                email: 'director@example.com', // This should be fetched from auth users
+                firstName: d.firstName || '',
+                lastName: d.lastName || '',
+                email: d.email || '',
               }))}
+              staffMembers={staffMembers}
             />
           </DialogContent>
         </Dialog>
@@ -275,10 +307,10 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {show.startDate && show.endDate ? (
-                        `${show.startDate.toLocaleDateString()} - ${show.endDate.toLocaleDateString()}`
-                      ) : show.startDate ? (
-                        `From ${show.startDate.toLocaleDateString()}`
+                      {formatShowDate(show.startDate) && formatShowDate(show.endDate) ? (
+                        `${formatShowDate(show.startDate)} - ${formatShowDate(show.endDate)}`
+                      ) : formatShowDate(show.startDate) ? (
+                        `From ${formatShowDate(show.startDate)}`
                       ) : (
                         'No dates set'
                       )}
@@ -300,7 +332,7 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setEditingShow(show)}
+                        onClick={() => handleStartEditShow(show)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -331,20 +363,20 @@ export function ShowsPageClient({ organizationId }: ShowsPageClientProps) {
 
       {/* Edit Dialog */}
       <Dialog open={!!editingShow} onOpenChange={() => setEditingShow(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[98vw] max-w-7xl max-h-[92vh] overflow-y-auto">
           <DialogTitle>{t('shows.editShow')}</DialogTitle>
           {editingShow && (
             <ShowForm
               initialData={editingShow}
               onSubmit={handleUpdateShow}
               isLoading={isLoading}
-              organizationId={organizationId}
               directors={directors.map(d => ({
                 id: d.id,
-                firstName: 'Director', // This should be fetched from auth users
-                lastName: d.id,
-                email: 'director@example.com', // This should be fetched from auth users
+                firstName: d.firstName || '',
+                lastName: d.lastName || '',
+                email: d.email || '',
               }))}
+              staffMembers={staffMembers}
             />
           )}
         </DialogContent>

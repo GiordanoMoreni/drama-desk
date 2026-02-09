@@ -132,18 +132,9 @@ export class SupabaseShowRepository extends BaseSupabaseRepository implements Sh
   }
 
   async findWithDirector(id: string, organizationId: string): Promise<ShowWithDirector | null> {
-    const { data, error } = await this.supabase
+    const { data: showRow, error } = await this.supabase
       .from('shows')
-      .select(`
-        *,
-        director:organization_members!shows_director_id_fkey (
-          id,
-          user_id,
-          first_name:users!inner(raw_user_meta_data->>'full_name'),
-          last_name:users!inner(raw_user_meta_data->>'full_name'),
-          email:users!inner(email)
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .eq('organization_id', organizationId)
       .single();
@@ -153,7 +144,46 @@ export class SupabaseShowRepository extends BaseSupabaseRepository implements Sh
       throw new Error(`Database error: ${error.message}`);
     }
 
-    return this.mapShowWithDirectorRowToEntity(data);
+    const show = this.mapShowRowToEntity(showRow);
+
+    if (!showRow.director_id) {
+      return show;
+    }
+
+    const { data: directorMember, error: directorError } = await this.supabase
+      .from('organization_members')
+      .select('id, user_id')
+      .eq('id', showRow.director_id)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (directorError && directorError.code !== 'PGRST116') {
+      throw new Error(`Database error: ${directorError.message}`);
+    }
+
+    if (!directorMember) {
+      return show;
+    }
+
+    const { data: profile, error: profileError } = await this.supabase
+      .from('user_profiles')
+      .select('first_name, last_name, email')
+      .eq('id', directorMember.user_id)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      throw new Error(`Database error: ${profileError.message}`);
+    }
+
+    return {
+      ...show,
+      director: {
+        id: directorMember.id,
+        firstName: profile?.first_name || '',
+        lastName: profile?.last_name || '',
+        email: profile?.email || '',
+      },
+    };
   }
 
   async findByDirector(organizationId: string, directorId: string): Promise<Show[]> {

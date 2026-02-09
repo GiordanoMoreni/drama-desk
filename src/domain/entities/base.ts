@@ -23,3 +23,14 @@ export type ClassEnrollmentStatus = 'active' | 'inactive' | 'completed' | 'dropp
 export type ShowStatus = 'planning' | 'rehearsing' | 'performing' | 'completed' | 'cancelled';
 export type CharacterType = 'lead' | 'supporting' | 'ensemble' | 'crew';
 export type CastingStatus = 'assigned' | 'confirmed' | 'rehearsing' | 'performing' | 'completed';
+export type StaffRole =
+  | 'insegnante'
+  | 'regista'
+  | 'tecnico'
+  | 'assistente'
+  | 'drammaturgo'
+  | 'coreografo'
+  | 'scenografo'
+  | 'costumista'
+  | 'vocal_coach'
+  | 'movimento_scenico';

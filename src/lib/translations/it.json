@@ -102,6 +102,19 @@
     "archived": "Archiviato",
     "synopsis": "Sinossi"
   },
+  "staff": {
+    "title": "Staff",
+    "description": "Gestisci lo staff artistico, tecnico e didattico",
+    "createStaffMember": "Crea membro staff",
+    "addNewStaffMember": "Aggiungi membro staff",
+    "editStaffMember": "Modifica membro staff",
+    "staffCreatedSuccess": "Membro staff creato con successo!",
+    "staffUpdatedSuccess": "Membro staff aggiornato con successo!",
+    "staffDeletedSuccess": "Membro staff eliminato con successo!",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "primaryRole": "Ruolo principale"
+  },
   "organizations": {
     "title": "Impostazioni",
     "selectOrganization": "Seleziona Organizzazione",

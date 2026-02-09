@@ -1,4 +1,4 @@
-import { TenantEntity, ShowStatus, CharacterType, CastingStatus } from './base';
+import { TenantEntity, ShowStatus, CharacterType, CastingStatus, StaffRole } from './base';
 
 export interface Show extends TenantEntity {
   title: string;
@@ -71,6 +71,11 @@ export interface CreateShowData {
   endDate?: Date;
   venue?: string;
   budget?: number;
+  staffAssignments?: Array<{
+    staffMemberId: string;
+    role: StaffRole;
+    notes?: string;
+  }>;
 }
 
 export interface UpdateShowData {
@@ -83,6 +88,11 @@ export interface UpdateShowData {
   budget?: number;
   status?: ShowStatus;
   isActive?: boolean;
+  staffAssignments?: Array<{
+    staffMemberId: string;
+    role: StaffRole;
+    notes?: string;
+  }>;
 }
 
 export interface CreateRoleData {

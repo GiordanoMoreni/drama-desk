@@ -8,6 +8,8 @@ ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE class_enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE show_staff_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE castings ENABLE ROW LEVEL SECURITY;
 
@@ -213,6 +215,46 @@ CREATE POLICY "Organization members can view castings" ON castings
 
 -- Teachers and admins can manage castings
 CREATE POLICY "Teachers and admins can manage castings" ON castings
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
+
+-- Staff members policies
+DROP POLICY IF EXISTS "Organization members can view staff members" ON staff_members;
+DROP POLICY IF EXISTS "Teachers and admins can manage staff members" ON staff_members;
+
+CREATE POLICY "Organization members can view staff members" ON staff_members
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+CREATE POLICY "Teachers and admins can manage staff members" ON staff_members
+    FOR ALL USING (
+        organization_id IN (
+            SELECT om.organization_id
+            FROM organization_members om
+            WHERE om.user_id = auth.uid()
+            AND om.role IN ('admin', 'teacher')
+            AND om.is_active = true
+        )
+    );
+
+-- Show staff assignments policies
+DROP POLICY IF EXISTS "Organization members can view show staff assignments" ON show_staff_assignments;
+DROP POLICY IF EXISTS "Teachers and admins can manage show staff assignments" ON show_staff_assignments;
+
+CREATE POLICY "Organization members can view show staff assignments" ON show_staff_assignments
+    FOR SELECT USING (
+        organization_id IN (SELECT organization_id FROM get_current_user_organizations())
+    );
+
+CREATE POLICY "Teachers and admins can manage show staff assignments" ON show_staff_assignments
     FOR ALL USING (
         organization_id IN (
             SELECT om.organization_id
