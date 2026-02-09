@@ -5,19 +5,43 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Mail, Building2, Calendar } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
+import { createAdminClient } from '@/infrastructure/db/supabase/server-client';
 
 async function getUsers() {
   try {
     await requireAuth();
     
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/admin/users`, {
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
-    });
+    const supabase = await createAdminClient();
 
-    if (!response.ok) throw new Error('Failed to fetch users');
-    return await response.json();
+    const { data: members, error } = await supabase
+      .from('organization_members')
+      .select(`
+        id,
+        user_id,
+        organization_id,
+        role,
+        is_active,
+        invited_at,
+        joined_at,
+        organizations (
+          id,
+          name,
+          slug
+        ),
+        user_profiles (
+          first_name,
+          last_name,
+          email
+        )
+      `)
+      .order('invited_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+
+    return members || [];
   } catch (error) {
     console.error('Error fetching users:', error);
     return [];

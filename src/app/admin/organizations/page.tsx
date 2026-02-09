@@ -5,25 +5,57 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Users, Plus, Edit, Trash2 } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
+import { createAdminClient } from '@/infrastructure/db/supabase/server-client';
 
-// Fetch real organizations data from API
+// Fetch real organizations data directly from database
 async function getOrganizations() {
   try {
     await requireAuth();
     
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/admin/organizations`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+    const supabase = await createAdminClient();
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch organizations');
+    const { data: organizations, error } = await supabase
+      .from('organizations')
+      .select(`
+        id,
+        name,
+        slug,
+        description,
+        is_active,
+        contact_email,
+        created_at,
+        updated_at
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching organizations:', error);
+      return [];
     }
 
-    return await response.json();
+    // Get member count for each organization
+    const orgsWithMemberCount = await Promise.all(
+      (organizations || []).map(async (org: any) => {
+        const { count } = await supabase
+          .from('organization_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('organization_id', org.id);
+
+        const { count: adminCount } = await supabase
+          .from('organization_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('organization_id', org.id)
+          .eq('role', 'admin');
+
+        return {
+          ...org,
+          memberCount: count || 0,
+          adminCount: adminCount || 0,
+        };
+      })
+    );
+
+    return orgsWithMemberCount;
   } catch (error) {
     console.error('Error fetching organizations:', error);
     return [];
