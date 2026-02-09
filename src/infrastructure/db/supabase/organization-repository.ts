@@ -211,20 +211,62 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   }
 
   async getMembers(organizationId: string): Promise<OrganizationMember[]> {
-    const { data, error } = await this.supabase
+    // Fetch organization_members rows first
+    const { data: membersRows, error: membersError } = await this.supabase
       .from('organization_members')
-      .select(`
-        *,
-        user_profiles(first_name, last_name, email)
-      `)
+      .select('*')
       .eq('organization_id', organizationId)
       .order('invited_at');
 
-    if (error) {
-      throw new Error(`Database error: ${error.message}`);
+    if (membersError) {
+      throw new Error(`Database error: ${membersError.message}`);
     }
 
-    return data.map(row => this.mapOrganizationMemberRowToEntity(row));
+    const userIds = (membersRows || []).map((r: any) => r.user_id).filter(Boolean);
+
+    // If there are no user ids, return mapped members immediately
+    if (userIds.length === 0) {
+      return (membersRows || []).map((row: any) => ({
+        id: row.id,
+        organizationId: row.organization_id,
+        userId: row.user_id,
+        role: row.role,
+        isActive: row.is_active,
+        invitedAt: new Date(row.invited_at),
+        joinedAt: row.joined_at ? new Date(row.joined_at) : undefined,
+        invitedBy: row.invited_by || undefined,
+      }));
+    }
+
+    // Fetch profiles in a separate query and map by id
+    const { data: profiles, error: profilesError } = await this.supabase
+      .from('user_profiles')
+      .select('id, first_name, last_name, email')
+      .in('id', userIds);
+
+    if (profilesError) {
+      // Don't fail completely if profiles query fails; log and continue with member rows only
+      console.error('Error fetching user profiles for members:', profilesError);
+    }
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+    return (membersRows || []).map((row: any) => {
+      const profile = profileMap.get(row.user_id) || null;
+      return {
+        id: row.id,
+        organizationId: row.organization_id,
+        userId: row.user_id,
+        role: row.role,
+        isActive: row.is_active,
+        invitedAt: new Date(row.invited_at),
+        joinedAt: row.joined_at ? new Date(row.joined_at) : undefined,
+        invitedBy: row.invited_by || undefined,
+        firstName: profile?.first_name || undefined,
+        lastName: profile?.last_name || undefined,
+        email: profile?.email || undefined,
+      };
+    });
   }
 
   async getUserRole(organizationId: string, userId: string): Promise<'admin' | 'teacher' | 'staff' | null> {

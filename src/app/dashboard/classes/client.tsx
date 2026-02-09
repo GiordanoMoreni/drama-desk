@@ -185,11 +185,11 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
               onSubmit={handleCreateClass}
               isLoading={isLoading}
               organizationId={organizationId}
-              teachers={teachers.map(t => ({
-                id: t.id,
-                firstName: 'Teacher', // This should be fetched from auth users
-                lastName: t.id,
-                email: 'teacher@example.com', // This should be fetched from auth users
+              teachers={teachers.map(m => ({
+                id: m.id,
+                firstName: m.firstName || '',
+                lastName: m.lastName || '',
+                email: m.email || '',
               }))}
             />
           </DialogContent>
