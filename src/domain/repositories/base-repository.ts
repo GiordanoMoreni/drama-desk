@@ -23,7 +23,9 @@ export interface BaseRepository<T, CreateData, UpdateData, Filters extends Recor
   exists(id: UUID, organizationId?: UUID): Promise<boolean>;
 }
 
-export interface OrganizationScopedRepository<T, CreateData, UpdateData, Filters extends Record<string, unknown> = Record<string, unknown>>
-  extends BaseRepository<T, CreateData, UpdateData, Filters> {
-  // Additional methods specific to organization-scoped repositories
-}
+export type OrganizationScopedRepository<
+  T,
+  CreateData,
+  UpdateData,
+  Filters extends Record<string, unknown> = Record<string, unknown>,
+> = BaseRepository<T, CreateData, UpdateData, Filters>;

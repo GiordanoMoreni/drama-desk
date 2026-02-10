@@ -1,9 +1,8 @@
-import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Theater, Users, Calendar, Star, CheckCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { Theater, Users, Calendar, ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function Home() {

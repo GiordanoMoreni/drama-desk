@@ -48,7 +48,7 @@ export default function RegisterPage() {
 
       toast.success('Registrazione completata! Controlla la tua email per verificare l\'account.');
       router.push('/login?message=Controlla la tua email per verificare l\'account');
-    } catch (error) {
+    } catch {
       toast.error(t('errors.internalServerError'));
     } finally {
       setIsLoading(false);

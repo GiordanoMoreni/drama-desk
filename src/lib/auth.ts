@@ -1,8 +1,6 @@
 import { createServerClient } from '../infrastructure/db/supabase/server-client';
-import { createBrowserClient, createServerClient as createSupabaseServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { config } from '../lib/config';
 
 export interface AuthUser {
   id: string;
@@ -45,7 +43,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       email: session.user.email!,
       user_metadata: session.user.user_metadata
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -212,8 +210,15 @@ export async function signOut() {
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    console.error('Error signing out:', error);
-    throw error;
+    const message = (error.message || '').toLowerCase();
+    const isStaleRefreshToken =
+      message.includes('invalid refresh token') ||
+      message.includes('refresh token not found');
+
+    if (!isStaleRefreshToken) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
   }
 
   // Clear organization and admin cookies

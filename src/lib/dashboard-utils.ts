@@ -21,7 +21,7 @@ export async function requireOrganizationContext() {
  * Use: redirect(redirectToNewDashboardRoute('/dashboard/students'))
  */
 export function redirectToNewDashboardRoute(oldPath: string): string {
-  const orgId = getCookieSync('current-organization');
+  const orgId = getCookieSync();
   if (!orgId) {
     return '/dashboard';
   }
@@ -35,7 +35,7 @@ export function redirectToNewDashboardRoute(oldPath: string): string {
  * Helper to get cookie value synchronously (for use in non-async contexts)
  * Note: This won't work in truly async contexts; use getCurrentOrganization instead
  */
-function getCookieSync(name: string): string | null {
+function getCookieSync(): string | null {
   // This is a placeholder - in practice, you'd need async context
   // For now, prefer using getCurrentOrganization() which is async
   return null;

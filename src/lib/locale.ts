@@ -12,7 +12,7 @@ export async function getUserLocale(): Promise<Locale> {
     if (localeFromCookie && isValidLocale(localeFromCookie)) {
       return localeFromCookie as Locale;
     }
-  } catch (error) {
+  } catch {
     // In case we're in a browser context, fall back to default
   }
 
@@ -31,7 +31,7 @@ export async function setUserLocale(locale: Locale) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 365, // 1 year
     });
-  } catch (error) {
+  } catch {
     // Ignore cookie set errors in client context
   }
 }

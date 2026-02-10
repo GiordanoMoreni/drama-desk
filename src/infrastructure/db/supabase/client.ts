@@ -1,8 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
 import { createBrowserClient as createBrowserClientSSR } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { config } from '@/lib/config';
 
 // Client-side Supabase client (safe for browser)
+let browserClient: SupabaseClient | null = null;
+let hasSanitizedSession = false;
+
 export function createBrowserClient() {
   // Read config at function call time, not module load time
   const supabaseUrl = config.supabase.url;
@@ -27,12 +30,30 @@ export function createBrowserClient() {
     );
   }
 
-  return createBrowserClientSSR(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  });
+  if (!browserClient) {
+    browserClient = createBrowserClientSSR(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
+  }
+
+  // If local storage contains a stale/invalid refresh token, clear local auth state once.
+  if (typeof window !== 'undefined' && !hasSanitizedSession) {
+    hasSanitizedSession = true;
+    browserClient.auth.getSession().then(({ error }) => {
+      const isInvalidRefreshToken =
+        (error?.message || '').toLowerCase().includes('invalid refresh token') ||
+        (error?.message || '').toLowerCase().includes('refresh token not found');
+
+      if (isInvalidRefreshToken) {
+        void browserClient?.auth.signOut({ scope: 'local' });
+      }
+    });
+  }
+
+  return browserClient;
 }
 
 // Type-safe database types (to be generated from Supabase)

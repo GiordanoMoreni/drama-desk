@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { requireOrganization } from '@/lib/auth';
-import { getServices } from '@/lib/di';
 
 export async function GET() {
   console.log('=== DASHBOARD API START ===');
@@ -8,10 +7,6 @@ export async function GET() {
   try {
     const orgData = await requireOrganization();
     console.log('Organization retrieved:', orgData.organization.organizationId);
-
-    console.log('Getting services...');
-    const services = await getServices();
-    console.log('Services loaded successfully');
 
     // Return static data for now
     const dashboardData = {

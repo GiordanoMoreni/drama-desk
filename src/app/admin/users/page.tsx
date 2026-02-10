@@ -2,10 +2,32 @@ export const dynamic = 'force-dynamic';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Users, Mail, Building2, Calendar } from 'lucide-react';
+import { Users, Mail, Building2 } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
 import { createAdminClient } from '@/infrastructure/db/supabase/server-client';
+
+interface AdminMemberRow {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  role: 'admin' | 'teacher' | 'staff';
+  is_active: boolean;
+  invited_at: string;
+  joined_at: string | null;
+}
+
+interface AdminOrganizationRow {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface AdminUserProfileRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
 
 async function getUsers() {
   try {
@@ -15,25 +37,7 @@ async function getUsers() {
 
     const { data: members, error } = await supabase
       .from('organization_members')
-      .select(`
-        id,
-        user_id,
-        organization_id,
-        role,
-        is_active,
-        invited_at,
-        joined_at,
-        organizations (
-          id,
-          name,
-          slug
-        ),
-        user_profiles (
-          first_name,
-          last_name,
-          email
-        )
-      `)
+      .select('id, user_id, organization_id, role, is_active, invited_at, joined_at')
       .order('invited_at', { ascending: false });
 
     if (error) {
@@ -41,9 +45,39 @@ async function getUsers() {
       return [];
     }
 
-    return members || [];
+    const typedMembers = (members || []) as AdminMemberRow[];
+    if (typedMembers.length === 0) return [];
+
+    const organizationIds = Array.from(new Set(typedMembers.map((member) => member.organization_id)));
+    const userIds = Array.from(new Set(typedMembers.map((member) => member.user_id)));
+
+    const [{ data: organizations }, { data: profiles }] = await Promise.all([
+      supabase
+        .from('organizations')
+        .select('id, name, slug')
+        .in('id', organizationIds),
+      supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, email')
+        .in('id', userIds),
+    ]);
+
+    const orgMap = new Map(
+      ((organizations || []) as AdminOrganizationRow[]).map((org) => [org.id, org])
+    );
+    const profileMap = new Map(
+      ((profiles || []) as AdminUserProfileRow[]).map((profile) => [profile.id, profile])
+    );
+
+    return typedMembers.map((member) => ({
+      ...member,
+      organizations: orgMap.get(member.organization_id) || null,
+      user_profiles: profileMap.get(member.user_id) || null,
+    }));
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Error fetching users:', {
+      message: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 }

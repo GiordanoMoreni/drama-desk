@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, Calendar, Theater, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Calendar, Theater, TrendingUp, Clock } from 'lucide-react';
 import { requireAuth, getUserOrganizations } from '@/lib/auth';
 import { getServices } from '@/lib/di';
 import { t, interpolate } from '@/lib/translations';

@@ -1,7 +1,7 @@
 import { requireOrganization } from '@/lib/auth';
 import { getOrganizationRepository } from '@/lib/di';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const { organization } = await requireOrganization();
 

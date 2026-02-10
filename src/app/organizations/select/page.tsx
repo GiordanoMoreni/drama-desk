@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { getCurrentUser, getUserOrganizations, setCurrentOrganization } from '@/lib/auth';
-import { getServices } from '@/lib/di';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -191,11 +191,11 @@ export default async function OrganizationSelectPage({ searchParams }: Organizat
                     Demo Rapida
                   </Button>
                 </form>
-                <a href="/">
-                  <Button variant="outline" className="w-full">
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/">
                     Torna alla Home
-                  </Button>
-                </a>
+                  </Link>
+                </Button>
               </div>
             </div>
           </CardContent>

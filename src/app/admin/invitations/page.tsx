@@ -3,9 +3,32 @@ export const dynamic = 'force-dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Mail, Building2, Calendar, Check, X } from 'lucide-react';
+import { UserPlus, Mail, Building2, Check, X } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
 import { createAdminClient } from '@/infrastructure/db/supabase/server-client';
+
+interface AdminInvitationRow {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  role: 'admin' | 'teacher' | 'staff';
+  is_active: boolean;
+  invited_at: string;
+  joined_at: string | null;
+}
+
+interface AdminOrganizationRow {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface AdminUserProfileRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
 
 async function getInvitations() {
   try {
@@ -15,25 +38,7 @@ async function getInvitations() {
 
     const { data: invitations, error } = await supabase
       .from('organization_members')
-      .select(`
-        id,
-        user_id,
-        organization_id,
-        role,
-        is_active,
-        invited_at,
-        joined_at,
-        organizations (
-          id,
-          name,
-          slug
-        ),
-        user_profiles (
-          first_name,
-          last_name,
-          email
-        )
-      `)
+      .select('id, user_id, organization_id, role, is_active, invited_at, joined_at')
       .is('joined_at', null)
       .order('invited_at', { ascending: false });
 
@@ -42,9 +47,39 @@ async function getInvitations() {
       return [];
     }
 
-    return invitations || [];
+    const typedInvitations = (invitations || []) as AdminInvitationRow[];
+    if (typedInvitations.length === 0) return [];
+
+    const organizationIds = Array.from(new Set(typedInvitations.map((invitation) => invitation.organization_id)));
+    const userIds = Array.from(new Set(typedInvitations.map((invitation) => invitation.user_id)));
+
+    const [{ data: organizations }, { data: profiles }] = await Promise.all([
+      supabase
+        .from('organizations')
+        .select('id, name, slug')
+        .in('id', organizationIds),
+      supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, email')
+        .in('id', userIds),
+    ]);
+
+    const orgMap = new Map(
+      ((organizations || []) as AdminOrganizationRow[]).map((org) => [org.id, org])
+    );
+    const profileMap = new Map(
+      ((profiles || []) as AdminUserProfileRow[]).map((profile) => [profile.id, profile])
+    );
+
+    return typedInvitations.map((invitation) => ({
+      ...invitation,
+      organizations: orgMap.get(invitation.organization_id) || null,
+      user_profiles: profileMap.get(invitation.user_id) || null,
+    }));
   } catch (error) {
-    console.error('Error fetching invitations:', error);
+    console.error('Error fetching invitations:', {
+      message: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 }

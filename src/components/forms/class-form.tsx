@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,7 +59,7 @@ export function ClassForm({ initialData, onSubmit, isLoading, teachers = [] }: C
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -76,6 +76,9 @@ export function ClassForm({ initialData, onSubmit, isLoading, teachers = [] }: C
     },
   });
 
+  const watchedSchedule = useWatch({ control, name: 'schedule' });
+  const watchedTeacherId = useWatch({ control, name: 'teacherId' });
+
   const handleDayToggle = (day: DayValue) => {
     const newSelectedDays = selectedDays.includes(day)
       ? selectedDays.filter(d => d !== day)
@@ -84,14 +87,14 @@ export function ClassForm({ initialData, onSubmit, isLoading, teachers = [] }: C
     setSelectedDays(newSelectedDays);
     setValue('schedule', {
       days: newSelectedDays as DayValue[],
-      startTime: watch('schedule')?.startTime || '',
-      endTime: watch('schedule')?.endTime || '',
-      timezone: watch('schedule')?.timezone,
+      startTime: watchedSchedule?.startTime || '',
+      endTime: watchedSchedule?.endTime || '',
+      timezone: watchedSchedule?.timezone,
     });
   };
 
   const handleScheduleChange = (field: 'startTime' | 'endTime' | 'timezone', value: string) => {
-    const currentSchedule = watch('schedule') || {
+    const currentSchedule = watchedSchedule || {
       days: selectedDays as DayValue[],
       startTime: '',
       endTime: '',
@@ -131,7 +134,7 @@ export function ClassForm({ initialData, onSubmit, isLoading, teachers = [] }: C
 
           <div className="space-y-2">
             <Label htmlFor="teacherId" className="text-sm font-medium">{t('classes.teacher')}</Label>
-            <Select value={watch('teacherId') || ''} onValueChange={(value) => setValue('teacherId', value === 'none' ? undefined : value)}>
+            <Select value={watchedTeacherId || ''} onValueChange={(value) => setValue('teacherId', value === 'none' ? undefined : value)}>
               <SelectTrigger className="h-10">
                 <SelectValue placeholder={t('classes.teacher')} />
               </SelectTrigger>
@@ -219,15 +222,15 @@ export function ClassForm({ initialData, onSubmit, isLoading, teachers = [] }: C
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startTime" className="text-xs text-gray-600">Ora inizio</Label>
-                  <Input id="startTime" type="time" value={watch('schedule')?.startTime || ''} onChange={(e) => handleScheduleChange('startTime', e.target.value)} className="h-10" />
+                  <Input id="startTime" type="time" value={watchedSchedule?.startTime || ''} onChange={(e) => handleScheduleChange('startTime', e.target.value)} className="h-10" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="endTime" className="text-xs text-gray-600">Ora fine</Label>
-                  <Input id="endTime" type="time" value={watch('schedule')?.endTime || ''} onChange={(e) => handleScheduleChange('endTime', e.target.value)} className="h-10" />
+                  <Input id="endTime" type="time" value={watchedSchedule?.endTime || ''} onChange={(e) => handleScheduleChange('endTime', e.target.value)} className="h-10" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="timezone" className="text-xs text-gray-600">Fuso orario</Label>
-                  <Input id="timezone" placeholder="es. Europe/Rome" value={watch('schedule')?.timezone || ''} onChange={(e) => handleScheduleChange('timezone', e.target.value)} className="h-10" />
+                  <Input id="timezone" placeholder="es. Europe/Rome" value={watchedSchedule?.timezone || ''} onChange={(e) => handleScheduleChange('timezone', e.target.value)} className="h-10" />
                 </div>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { TenantEntity, StudentStatus } from './base';
+import { TenantEntity } from './base';
 
 export interface Student extends TenantEntity {
   firstName: string;
