@@ -70,11 +70,37 @@ Open `http://localhost:3000`.
 - `npm run build` - production build
 - `npm run start` - start built app
 - `npm run lint` - run ESLint
+- `npm test` - run unit + integration tests (Vitest)
+- `npm run test:watch` - watch mode for Vitest
+- `npm run test:coverage` - coverage report (V8 provider)
+- `npm run e2e` - run Playwright end-to-end tests
+- `npm run e2e:ui` - run Playwright in UI mode
 
-Not configured yet (TODO):
+## Testing Strategy
 
-- `npm test` (unit/integration)
-- `npm run e2e` (end-to-end)
+- Unit/Integration: Vitest + React Testing Library
+- E2E: Playwright
+- Test policy: tests must not rely on external network/services
+  - Vitest setup blocks network by default (`vitest.setup.ts`)
+  - E2E test example aborts non-localhost requests
+- DB strategy:
+  - Unit tests: validate pure functions and UI behavior in isolation
+  - Integration tests: route handlers tested with mocked dependencies (repository/service/auth mocks)
+  - Contract tests for repository layer are recommended before introducing real test DB infra
+
+### Run tests locally
+
+```bash
+# unit + integration
+npm test
+
+# coverage
+npm run test:coverage
+
+# e2e (requires Playwright browsers)
+npx playwright install
+npm run e2e
+```
 
 ## Deployment (Vercel)
 
@@ -106,4 +132,3 @@ Required environment variables in production:
 - `docs/DATA_MODEL.md`
 - `docs/RUNBOOK.md`
 - `BACKEND_REPLACEMENT_GUIDE.md`
-
