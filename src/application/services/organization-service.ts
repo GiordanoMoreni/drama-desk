@@ -14,6 +14,12 @@ import {
 export class OrganizationService {
   constructor(private organizationRepository: OrganizationRepository) {}
 
+  private assertAdminRole(userRole: 'admin' | 'teacher' | 'staff') {
+    if (userRole !== 'admin') {
+      throw new Error('Only organization admins can link or unlink staff members');
+    }
+  }
+
   async getOrganizationById(id: string, organizationId?: string): Promise<Organization | null> {
     return this.organizationRepository.findById(id, organizationId || id);
   }
@@ -168,6 +174,74 @@ export class OrganizationService {
 
   async getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
     return this.organizationRepository.getMembers(organizationId);
+  }
+
+  async linkStaffMemberToOrganizationMember(
+    organizationId: string,
+    memberId: string,
+    staffMemberId: string,
+    userRole: 'admin' | 'teacher' | 'staff'
+  ): Promise<OrganizationMember> {
+    this.assertAdminRole(userRole);
+
+    const member = await this.organizationRepository.getMemberById(organizationId, memberId);
+    if (!member) {
+      throw new Error('Organization member not found');
+    }
+
+    const staffMember = await this.organizationRepository.getActiveStaffMemberById(organizationId, staffMemberId);
+    if (!staffMember) {
+      throw new Error('Staff member not found in this organization');
+    }
+
+    if (!staffMember.isActive) {
+      throw new Error('Staff member is not active');
+    }
+
+    if (staffMember.organizationId !== organizationId) {
+      throw new Error('Staff member belongs to a different organization');
+    }
+
+    const existingLinkedMember = await this.organizationRepository.findMemberByStaffMemberId(
+      organizationId,
+      staffMemberId
+    );
+
+    if (existingLinkedMember && existingLinkedMember.id !== memberId) {
+      throw new Error('Staff member is already linked to another organization member');
+    }
+
+    const updatedMember = await this.organizationRepository.linkStaffMember(
+      organizationId,
+      memberId,
+      staffMemberId
+    );
+
+    if (!updatedMember) {
+      throw new Error('Organization member not found');
+    }
+
+    return updatedMember;
+  }
+
+  async unlinkStaffMemberFromOrganizationMember(
+    organizationId: string,
+    memberId: string,
+    userRole: 'admin' | 'teacher' | 'staff'
+  ): Promise<OrganizationMember> {
+    this.assertAdminRole(userRole);
+
+    const member = await this.organizationRepository.getMemberById(organizationId, memberId);
+    if (!member) {
+      throw new Error('Organization member not found');
+    }
+
+    const updatedMember = await this.organizationRepository.unlinkStaffMember(organizationId, memberId);
+    if (!updatedMember) {
+      throw new Error('Organization member not found');
+    }
+
+    return updatedMember;
   }
 
   async getUserRole(organizationId: string, userId: string): Promise<'admin' | 'teacher' | 'staff' | null> {

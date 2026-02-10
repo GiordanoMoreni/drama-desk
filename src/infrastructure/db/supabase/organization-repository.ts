@@ -10,6 +10,26 @@ import { OrganizationRepository } from '../../../domain/repositories';
 import { OrganizationRow } from './types';
 import { BaseSupabaseRepository } from './base-repository';
 
+interface StaffMemberLinkRow {
+  id: string;
+  organization_id: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  primary_role:
+    | 'insegnante'
+    | 'regista'
+    | 'tecnico'
+    | 'assistente'
+    | 'drammaturgo'
+    | 'coreografo'
+    | 'scenografo'
+    | 'costumista'
+    | 'vocal_coach'
+    | 'movimento_scenico';
+  is_active: boolean;
+}
+
 export class SupabaseOrganizationRepository extends BaseSupabaseRepository implements OrganizationRepository {
   constructor(supabase: SupabaseClient) {
     super(supabase);
@@ -202,6 +222,96 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
     return this.mapOrganizationMemberRowToEntity(data);
   }
 
+  async getMemberById(organizationId: string, memberId: string): Promise<OrganizationMember | null> {
+    const { data, error } = await this.supabase
+      .from('organization_members')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('id', memberId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return this.mapOrganizationMemberRowToEntity(data);
+  }
+
+  async getActiveStaffMemberById(organizationId: string, staffMemberId: string): Promise<{
+    id: string;
+    organizationId: string;
+    isActive: boolean;
+  } | null> {
+    const { data, error } = await this.supabase
+      .from('staff_members')
+      .select('id, organization_id, is_active')
+      .eq('organization_id', organizationId)
+      .eq('id', staffMemberId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return {
+      id: data.id,
+      organizationId: data.organization_id,
+      isActive: data.is_active,
+    };
+  }
+
+  async findMemberByStaffMemberId(organizationId: string, staffMemberId: string): Promise<OrganizationMember | null> {
+    const { data, error } = await this.supabase
+      .from('organization_members')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('staff_member_id', staffMemberId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return this.mapOrganizationMemberRowToEntity(data);
+  }
+
+  async linkStaffMember(organizationId: string, memberId: string, staffMemberId: string): Promise<OrganizationMember | null> {
+    const { data, error } = await this.supabase
+      .from('organization_members')
+      .update({ staff_member_id: staffMemberId })
+      .eq('organization_id', organizationId)
+      .eq('id', memberId)
+      .select('*')
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return this.mapOrganizationMemberRowToEntity(data);
+  }
+
+  async unlinkStaffMember(organizationId: string, memberId: string): Promise<OrganizationMember | null> {
+    const { data, error } = await this.supabase
+      .from('organization_members')
+      .update({ staff_member_id: null })
+      .eq('organization_id', organizationId)
+      .eq('id', memberId)
+      .select('*')
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return this.mapOrganizationMemberRowToEntity(data);
+  }
+
   async removeMember(organizationId: string, userId: string): Promise<boolean> {
     const { error } = await this.supabase
       .from('organization_members')
@@ -236,6 +346,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
         id: row.id,
         organizationId: row.organization_id,
         userId: row.user_id,
+        staffMemberId: row.staff_member_id || undefined,
         role: row.role,
         isActive: row.is_active,
         invitedAt: new Date(row.invited_at),
@@ -257,12 +368,37 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
 
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
+    const linkedStaffIds = Array.from(
+      new Set(
+        (membersRows || [])
+          .map((row: any) => row.staff_member_id)
+          .filter((staffId: string | null) => Boolean(staffId))
+      )
+    ) as string[];
+
+    let staffMap = new Map<string, StaffMemberLinkRow>();
+    if (linkedStaffIds.length > 0) {
+      const { data: linkedStaff, error: linkedStaffError } = await this.supabase
+        .from('staff_members')
+        .select('id, organization_id, first_name, last_name, email, primary_role, is_active')
+        .eq('organization_id', organizationId)
+        .in('id', linkedStaffIds);
+
+      if (linkedStaffError) {
+        console.error('Error fetching linked staff members:', linkedStaffError);
+      } else {
+        staffMap = new Map((linkedStaff || []).map((staff: StaffMemberLinkRow) => [staff.id, staff]));
+      }
+    }
+
     return (membersRows || []).map((row: any) => {
       const profile = profileMap.get(row.user_id) || null;
+      const linkedStaff = row.staff_member_id ? staffMap.get(row.staff_member_id) : undefined;
       return {
         id: row.id,
         organizationId: row.organization_id,
         userId: row.user_id,
+        staffMemberId: row.staff_member_id || undefined,
         role: row.role,
         isActive: row.is_active,
         invitedAt: new Date(row.invited_at),
@@ -271,6 +407,9 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
         firstName: profile?.first_name || undefined,
         lastName: profile?.last_name || undefined,
         email: profile?.email || undefined,
+        linkedStaffName: linkedStaff ? `${linkedStaff.first_name} ${linkedStaff.last_name}`.trim() : undefined,
+        linkedStaffEmail: linkedStaff?.email || undefined,
+        linkedStaffPrimaryRole: linkedStaff?.primary_role || undefined,
       };
     });
   }
@@ -332,6 +471,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
       id: row.id,
       organizationId: row.organization_id,
       userId: row.user_id,
+      staffMemberId: row.staff_member_id || undefined,
       role: row.role,
       isActive: row.is_active,
       invitedAt: new Date(row.invited_at),

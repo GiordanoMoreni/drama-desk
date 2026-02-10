@@ -11,6 +11,7 @@ Sources:
 ```mermaid
 erDiagram
     organizations ||--o{ organization_members : has
+    staff_members ||--o| organization_members : optional_link
     organizations ||--o{ students : has
     organizations ||--o{ classes : has
     organizations ||--o{ class_enrollments : scopes
@@ -44,6 +45,8 @@ erDiagram
   - membership of auth user inside organization
   - role enum-like check: `admin|teacher|staff`
   - unique `(organization_id, user_id)`
+  - optional `staff_member_id -> staff_members.id` (`ON DELETE SET NULL`)
+  - unique partial index `(organization_id, staff_member_id)` where `staff_member_id is not null`
 - `students`
   - student profile + contact/medical notes
 - `classes`
@@ -80,9 +83,12 @@ erDiagram
 - Uniques:
   - `organizations.slug`
   - `organization_members(organization_id, user_id)`
+  - partial unique `organization_members(organization_id, staff_member_id)` when linked
   - `class_enrollments(class_id, student_id)`
   - `show_staff_assignments(show_id, staff_member_id)`
   - `castings(role_id, student_id)`
+- Cross-tenant guard:
+  - trigger `validate_organization_member_staff_link()` enforces that linked `staff_member_id` belongs to same `organization_id`
 
 ## Soft Delete / Lifecycle
 
@@ -97,10 +103,11 @@ RLS is enabled for core tables in `database/rls-policies.sql`.
 
 Important:
 
-- `organization_members` currently includes temporary broad policies for authenticated users. Treat this as a hardening TODO before production.
+- `organization_members` is now policy-scoped for tenant safety:
+  - admins can read/manage members in their organization
+  - non-admin users can read only their own membership row
 
 ## Missing / Assumptions
 
 - No explicit migration version table found (manual SQL application assumed).
 - No seed for full demo domain data in repo (only profile population helper).
-

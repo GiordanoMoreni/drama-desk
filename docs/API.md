@@ -62,6 +62,8 @@ Documentazione degli endpoint HTTP esposti da Drama Desk (`src/app/api/**`).
 | GET | `/api/staff/{id}` | Yes (`requireOrganization`) | None | Staff detail |
 | PUT | `/api/staff/{id}` | Yes (`requireOrganization`) | None | Update staff member |
 | DELETE | `/api/staff/{id}` | Yes (`requireOrganization`) | None | Delete staff member |
+| PUT | `/api/organizations/members/{memberId}/staff-link` | Yes (`requireOrganization`) | Admin (enforced) | Link active staff member to organization member |
+| DELETE | `/api/organizations/members/{memberId}/staff-link` | Yes (`requireOrganization`) | Admin (enforced) | Unlink staff member from organization member |
 | GET | `/api/admin/dashboard` | Yes (`requireAuth`) | Intended admin | **WIP**: currently returns mock data |
 | GET | `/api/admin/users` | Yes (`requireAuth`) | Intended admin | Returns organization memberships + profiles |
 | GET | `/api/admin/invitations` | Yes (`requireAuth`) | Intended admin | Pending invitations (`joined_at is null`) |

@@ -102,6 +102,12 @@ Pattern:
   - Regular server client (RLS applies)
   - Admin client (`service_role`) for privileged operations
 
+Recent addition:
+
+- `OrganizationService` now handles optional linking between `organization_members` and `staff_members` through dedicated APIs:
+  - `PUT /api/organizations/members/[memberId]/staff-link`
+  - `DELETE /api/organizations/members/[memberId]/staff-link`
+
 ## Multi-tenant Strategy
 
 Isolation primitives:
@@ -110,14 +116,14 @@ Isolation primitives:
 2. Query-level: services/repositories pass `organizationId` in filters/operations
 3. RLS-level: policies in `database/rls-policies.sql` gate records by user membership
 4. Request context: `requireOrganization()` resolves tenant from `current-organization` cookie
+5. DB guard trigger: `validate_organization_member_staff_link()` blocks cross-tenant member-staff links
 
-Known caveat:
+Policy note:
 
-- `organization_members` policies include temporary broad policies to avoid recursion issues. This should be revisited before strict production hardening.
+- `organization_members` policies are scoped so admins can manage members in their organization and non-admin users can only read their own membership row.
 
 ## Missing / Assumptions
 
 - Assumption: Supabase Auth and `auth.users` are the source of truth for identities.
 - Assumption: Database migrations are SQL-file driven manually (no migration tool currently configured).
 - Missing: explicit background jobs/queues (none found in current codebase).
-

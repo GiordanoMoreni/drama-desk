@@ -25,6 +25,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION is_current_user_org_admin(target_organization_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1
+        FROM organization_members om
+        WHERE om.organization_id = target_organization_id
+          AND om.user_id = auth.uid()
+          AND om.role = 'admin'
+          AND om.is_active = true
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Organizations policies
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can view their organizations" ON organizations;
@@ -70,22 +84,42 @@ DROP POLICY IF EXISTS "Allow initial member creation during organization setup" 
 DROP POLICY IF EXISTS "Users can view their own memberships" ON organization_members;
 DROP POLICY IF EXISTS "Allow authenticated users to view organization members" ON organization_members;
 DROP POLICY IF EXISTS "Allow authenticated users to manage organization members" ON organization_members;
+DROP POLICY IF EXISTS "Organization admins can view members in their organization" ON organization_members;
+DROP POLICY IF EXISTS "Users can view their own organization memberships" ON organization_members;
+DROP POLICY IF EXISTS "Organization admins can insert members" ON organization_members;
+DROP POLICY IF EXISTS "Organization admins can update members" ON organization_members;
+DROP POLICY IF EXISTS "Organization admins can delete members" ON organization_members;
 
 -- Re-enable RLS for organization_members
 ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
 
--- Allow initial member creation during organization setup (for creators)
-CREATE POLICY "Allow initial member creation during organization setup" ON organization_members
-    FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can view their own organization memberships" ON organization_members
+    FOR SELECT USING (
+        user_id = auth.uid()
+    );
 
--- Temporarily allow authenticated users to view organization members
--- TODO: Implement proper RLS policies without recursion
-CREATE POLICY "Allow authenticated users to view organization members" ON organization_members
-    FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Organization admins can view members in their organization" ON organization_members
+    FOR SELECT USING (
+        is_current_user_org_admin(organization_id)
+    );
 
--- Allow authenticated users to manage their own records and admins to manage all
-CREATE POLICY "Allow authenticated users to manage organization members" ON organization_members
-    FOR ALL USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Organization admins can insert members" ON organization_members
+    FOR INSERT WITH CHECK (
+        is_current_user_org_admin(organization_id)
+        OR user_id = auth.uid()
+    );
+
+CREATE POLICY "Organization admins can update members" ON organization_members
+    FOR UPDATE USING (
+        is_current_user_org_admin(organization_id)
+    ) WITH CHECK (
+        is_current_user_org_admin(organization_id)
+    );
+
+CREATE POLICY "Organization admins can delete members" ON organization_members
+    FOR DELETE USING (
+        is_current_user_org_admin(organization_id)
+    );
 
 -- Students policies
 -- Drop existing policies if they exist
