@@ -1,0 +1,123 @@
+# Architecture
+
+## High-level Layers
+
+```text
++------------------------------+
+| UI / App Router Pages        |
+| src/app/**, src/components/**|
++--------------+---------------+
+               |
+               v
++------------------------------+
+| API Routes (Next Route Hand.)|
+| src/app/api/**               |
++--------------+---------------+
+               |
+               v
++------------------------------+
+| Application Services         |
+| src/application/services/**  |
+| + use-cases/**               |
++--------------+---------------+
+               |
+               v
++------------------------------+
+| Repository Interfaces        |
+| src/domain/repositories/**   |
++--------------+---------------+
+               |
+               v
++------------------------------+
+| Supabase Repository Impl     |
+| src/infrastructure/db/**     |
++--------------+---------------+
+               |
+               v
++------------------------------+
+| PostgreSQL + Supabase Auth   |
+| database/*.sql               |
++------------------------------+
+```
+
+## Entrypoint and Routing
+
+- Framework: Next.js App Router
+- Root layout: `src/app/layout.tsx`
+- Main route groups:
+  - Public: `/`, `/login`, `/register`, `/organizations/select`
+  - Dashboard: `/dashboard`, `/dashboard/[organizationId]/**`
+  - Admin: `/admin/**`
+  - API: `/api/**`
+
+## Middleware
+
+File: `middleware.ts`
+
+Current responsibilities:
+
+- Redirect legacy dashboard routes:
+  - `/dashboard/students` -> `/dashboard/[organizationId]/students`
+  - Similar for classes/shows/organization/profile
+- Uses `current-organization` cookie to resolve destination org id
+- Logs request diagnostics (currently verbose)
+
+TODO:
+
+- Reduce/disable verbose middleware logs in production.
+
+## Authentication and Session
+
+Files:
+
+- `src/lib/auth.ts`
+- `src/infrastructure/db/supabase/server-client.ts`
+- `src/infrastructure/db/supabase/client.ts`
+
+Auth model:
+
+- Supabase Auth session from cookies (SSR client)
+- Browser Supabase client with token auto-refresh and stale-token sanitization
+- Custom tenant cookie:
+  - `current-organization` (httpOnly) selects active tenant context
+
+Important note:
+
+- `admin-session` cookie exists for admin test mode bypass (`getCurrentUser` branch). This is useful in local/dev but should be hardened or removed for strict production operation.
+
+## Data Access and DI
+
+Files:
+
+- `src/lib/di.ts`
+- `src/infrastructure/db/supabase/*-repository.ts`
+- `src/application/services/*.ts`
+
+Pattern:
+
+- Route handlers/pages call service layer
+- Services depend on repository interfaces
+- DI container instantiates Supabase repository implementations
+- Two client modes:
+  - Regular server client (RLS applies)
+  - Admin client (`service_role`) for privileged operations
+
+## Multi-tenant Strategy
+
+Isolation primitives:
+
+1. Schema-level: most business tables contain `organization_id`
+2. Query-level: services/repositories pass `organizationId` in filters/operations
+3. RLS-level: policies in `database/rls-policies.sql` gate records by user membership
+4. Request context: `requireOrganization()` resolves tenant from `current-organization` cookie
+
+Known caveat:
+
+- `organization_members` policies include temporary broad policies to avoid recursion issues. This should be revisited before strict production hardening.
+
+## Missing / Assumptions
+
+- Assumption: Supabase Auth and `auth.users` are the source of truth for identities.
+- Assumption: Database migrations are SQL-file driven manually (no migration tool currently configured).
+- Missing: explicit background jobs/queues (none found in current codebase).
+

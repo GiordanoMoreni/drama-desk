@@ -1,283 +1,113 @@
 # Backend Replacement Guide
 
-This guide explains how to replace Supabase with any other database/backend system while maintaining the clean architecture and multi-tenancy features of this application.
+This guide explains how to replace Supabase in Drama Desk while preserving current behavior.
 
-## Architecture Overview
+## Current Backend Shape (Real Implementation)
 
-The application follows Clean Architecture principles:
+- Framework: Next.js App Router (`src/app/**`)
+- Route handlers: `src/app/api/**`
+- Auth/session:
+  - server: `src/infrastructure/db/supabase/server-client.ts`
+  - browser: `src/infrastructure/db/supabase/client.ts`
+  - app auth facade: `src/lib/auth.ts`
+- DI and wiring: `src/lib/di.ts`
+- Data layer:
+  - interfaces: `src/domain/repositories/**`
+  - implementations: `src/infrastructure/db/supabase/*-repository.ts`
+- SQL source of truth: `database/schema.sql`, `database/rls-policies.sql`
 
-```
-├── Domain Layer (Business Logic)
-│   ├── entities/          # Domain models and business rules
-│   └── repositories/      # Repository interfaces (contracts)
-├── Application Layer (Use Cases)
-│   ├── services/          # Application services
-│   └── use-cases/         # Complex business operations
-├── Infrastructure Layer (External Concerns)
-│   ├── db/supabase/       # Current Supabase implementation
-│   └── auth/             # Authentication infrastructure
-└── Presentation Layer (UI)
-    ├── app/              # Next.js pages and API routes
-    └── components/       # React components
-```
+## What Must Stay Stable
 
-## Key Principles
+If you swap backend, keep these contracts unchanged for app code:
 
-1. **Dependency Inversion**: UI and Application layers depend only on abstractions (interfaces), not concrete implementations
-2. **Infrastructure Isolation**: Database concerns are completely isolated in the infrastructure layer
-3. **Multi-tenancy**: All domain entities include `organizationId` for tenant isolation
-4. **Repository Pattern**: All data access goes through repository interfaces
+1. Repository interfaces in `src/domain/repositories/**`
+2. Service public methods in `src/application/services/**`
+3. Auth facade functions in `src/lib/auth.ts`:
+   - `getCurrentUser`
+   - `getUserOrganizations`
+   - `getCurrentOrganization`
+   - `requireAuth`
+   - `requireOrganization`
+   - `signOut`
+4. Tenant context cookie behavior (`current-organization`)
 
-## Replacing Supabase
+## Replacement Plan
 
-### Step 1: Create New Infrastructure Implementation
+## 1) Implement new repositories
 
-1. Create a new directory in `src/infrastructure/db/` (e.g., `postgresql/`, `mongodb/`, `mysql/`)
+Create a new provider folder, for example:
 
-2. Implement repository interfaces for your chosen database:
-
-```typescript
-// src/infrastructure/db/postgresql/student-repository.ts
-import { StudentRepository } from '../../../domain/repositories';
-import { Student, CreateStudentData, UpdateStudentData, StudentFilters } from '../../../domain/entities';
-
-export class PostgreSQLStudentRepository implements StudentRepository {
-  constructor(private db: DatabaseConnection) {}
-
-  async findById(id: string, organizationId: string): Promise<Student | null> {
-    // Your PostgreSQL implementation
-  }
-
-  async findAll(organizationId: string, filters?: StudentFilters): Promise<PaginatedResult<Student>> {
-    // Your PostgreSQL implementation
-  }
-
-  // ... implement all other methods
-}
+```text
+src/infrastructure/db/postgres/
 ```
 
-### Step 2: Update Dependency Injection
+Implement all repository interfaces currently implemented in Supabase files:
 
-Modify `src/lib/di.ts` to use your new implementations:
+- student repository
+- class and enrollment repositories
+- show/role/casting repositories
+- staff and show-staff-assignment repositories
+- organization repository
 
-```typescript
-// Before (Supabase)
-import { SupabaseStudentRepository } from '../infrastructure/db/supabase/student-repository';
+## 2) Replace DI wiring
 
-// After (PostgreSQL)
-import { PostgreSQLStudentRepository } from '../infrastructure/db/postgresql/student-repository';
-import { createDatabaseConnection } from '../infrastructure/db/postgresql/connection';
+Update `src/lib/di.ts` imports and constructors from Supabase implementations to your new implementations.
 
-export class Container {
-  // ... existing code ...
+Keep function signatures stable:
 
-  getRepositories(): Repositories {
-    const dbConnection = createDatabaseConnection();
+- `getRepositories()`
+- `getServices()`
+- `getAdminRepositories()`
+- `getAdminServices()`
 
-    return {
-      studentRepository: new PostgreSQLStudentRepository(dbConnection),
-      // ... other repositories
-    };
-  }
-}
-```
+## 3) Replace auth provider integration
 
-### Step 3: Update Authentication System
+Current app assumes Supabase session semantics.
 
-Replace Supabase Auth with your chosen authentication system:
+If replacing auth:
 
-1. Update `src/lib/auth.ts` to work with your auth provider
-2. Implement the same interface: `getCurrentUser()`, `getUserOrganizations()`, etc.
-3. Update middleware to handle your auth tokens
+- keep same return shape in `AuthUser` and `OrganizationContext`
+- preserve redirects/error behavior in `requireAuth`/`requireOrganization`
+- preserve cookie handling for `current-organization`
 
-### Step 4: Database Schema Migration
+## 4) Keep multi-tenant isolation
 
-1. Convert the SQL schema in `database/schema.sql` to your target database
-2. Implement Row Level Security equivalent in your database
-3. Create migration scripts to transfer existing data
+Current model relies on `organization_id` in domain tables and RLS policies.
 
-### Step 5: Update Environment Variables
+In a new backend you must enforce the same isolation:
 
-Replace Supabase environment variables with your new backend's configuration:
+- always filter by `organizationId` in reads/writes
+- enforce role checks (`admin|teacher|staff`)
+- preserve uniqueness constraints across tenant boundaries
 
-```env
-# Replace these:
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
+## 5) Data migration
 
-# With your new backend variables:
-DATABASE_URL=...
-AUTH_JWT_SECRET=...
-# etc.
-```
+Migrate schema from `database/schema.sql` and profile helpers:
 
-## Multi-Tenancy Implementation
+- `database/add_user_profiles.sql`
+- `database/populate_user_profiles.sql`
 
-### Database Level (Recommended)
+If moving away from Supabase Auth, define a replacement for `auth.users` linkage currently used by `user_profiles.id`.
 
-Implement tenant isolation at the database level:
+## Known Current Caveats to Account For
 
-**PostgreSQL with RLS:**
-```sql
--- Enable RLS
-ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+- `admin-session` test cookie exists in auth flow (`src/lib/auth.ts`).
+- `organization_members` RLS policies currently include temporary broad policies.
+- SQL migrations are file-based and manually applied (no migration runner configured).
 
--- Policy for tenant isolation
-CREATE POLICY "tenant_isolation" ON students
-  FOR ALL USING (organization_id = current_tenant_id());
-```
+## Validation Checklist After Replacement
 
-**MongoDB:**
-```javascript
-// Collection-level security
-db.students.find({
-  organizationId: session.organizationId
-});
-```
+- `npm run lint` passes
+- `npm run build` passes
+- Login/logout works
+- Organization selection cookie works
+- Dashboard pages load tenant-scoped data
+- Admin pages return real data
+- No cross-tenant data leakage
 
-### Application Level (Fallback)
+## Missing / Assumptions
 
-If database-level isolation isn't available:
+- Assumes equivalent server-side auth session API exists in replacement backend.
+- Assumes replacement can provide both user-scoped client and elevated admin client modes.
+- TODO: Introduce migration/version tooling before major backend swap.
 
-```typescript
-// In your repository implementation
-async findAll(organizationId: string): Promise<Student[]> {
-  const allStudents = await this.db.students.findAll();
-  return allStudents.filter(s => s.organizationId === organizationId);
-}
-```
-
-## Repository Interface Contracts
-
-All repository implementations must adhere to these interfaces:
-
-### StudentRepository
-- `findById(id, organizationId)` - Get single student
-- `findAll(organizationId, filters, pagination)` - Get paginated list
-- `create(data, organizationId)` - Create new student
-- `update(id, data, organizationId)` - Update existing student
-- `delete(id, organizationId)` - Delete student
-- `findByEmail(organizationId, email)` - Find by email within org
-
-### OrganizationRepository
-- `findById(id)` - Get organization
-- `addMember(orgId, userId, role)` - Add user to organization
-- `getMembers(orgId)` - Get organization members
-- `getUserRole(orgId, userId)` - Get user's role in org
-
-### ClassRepository & ClassEnrollmentRepository
-- Similar patterns for classes and enrollments
-- Include relationships between classes and students
-
-### ShowRepository, RoleRepository, CastingRepository
-- Complex relationships for theatre productions
-- Role assignments and casting management
-
-## Data Transformation
-
-Handle database-specific data types in your repository implementations:
-
-```typescript
-// Supabase returns dates as strings
-private mapRowToEntity(row: StudentRow): Student {
-  return {
-    ...row,
-    dateOfBirth: row.date_of_birth ? new Date(row.date_of_birth) : undefined,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
-  };
-}
-
-// Your database might return Date objects directly
-private mapRowToEntity(row: StudentRow): Student {
-  return {
-    ...row,
-    dateOfBirth: row.dateOfBirth, // Already a Date
-    createdAt: row.createdAt,     // Already a Date
-    updatedAt: row.updatedAt,     // Already a Date
-  };
-}
-```
-
-## Testing Your Implementation
-
-1. **Unit Tests**: Test repository implementations in isolation
-2. **Integration Tests**: Test with real database
-3. **E2E Tests**: Test complete user workflows
-
-Example test:
-```typescript
-describe('StudentRepository', () => {
-  let repository: StudentRepository;
-
-  beforeEach(() => {
-    repository = new YourDatabaseStudentRepository(dbConnection);
-  });
-
-  it('should create and retrieve a student', async () => {
-    const student = await repository.create(testData, organizationId);
-    const retrieved = await repository.findById(student.id, organizationId);
-
-    expect(retrieved).toEqual(student);
-  });
-
-  it('should enforce tenant isolation', async () => {
-    await repository.create(testData, orgA);
-    const result = await repository.findById(studentId, orgB);
-
-    expect(result).toBeNull();
-  });
-});
-```
-
-## Migration Strategy
-
-### Big Bang Migration
-1. Implement new backend completely
-2. Test thoroughly
-3. Switch over during maintenance window
-4. Migrate data in batches
-
-### Phased Migration
-1. Implement new repositories alongside existing ones
-2. Use feature flags to route traffic
-3. Migrate organizations one at a time
-4. Gradually phase out old system
-
-### Hybrid Approach
-1. Keep Supabase for auth and some data
-2. Migrate core entities to new backend
-3. Maintain dual writes during transition
-4. Switch auth system last
-
-## Performance Considerations
-
-1. **Indexing**: Ensure proper indexes on `organization_id` columns
-2. **Connection Pooling**: Implement proper connection management
-3. **Caching**: Consider Redis for frequently accessed data
-4. **Pagination**: Implement cursor-based pagination for large datasets
-
-## Security Considerations
-
-1. **Input Validation**: Validate all inputs at application layer
-2. **SQL Injection**: Use parameterized queries
-3. **Authentication**: Implement proper JWT validation
-4. **Authorization**: Enforce tenant isolation at all levels
-5. **Audit Logging**: Log all data access and modifications
-
-## Monitoring and Observability
-
-1. **Database Metrics**: Monitor query performance and connection pools
-2. **Error Tracking**: Implement comprehensive error logging
-3. **Performance Monitoring**: Track response times and throughput
-4. **Tenant Usage**: Monitor resource usage per organization
-
-## Support and Maintenance
-
-1. **Documentation**: Keep API documentation updated
-2. **Versioning**: Implement API versioning strategy
-3. **Backups**: Regular database backups and testing
-4. **Disaster Recovery**: Plan for data recovery scenarios
-
-This architecture ensures that your theatre management system remains maintainable, testable, and scalable regardless of the underlying database technology.

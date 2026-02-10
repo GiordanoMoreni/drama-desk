@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Drama Desk
 
-## Getting Started
+Drama Desk is a multi-tenant theatre management platform built with Next.js and Supabase. It lets theatre organizations manage students, classes, shows, staff, enrollments, casting, and admin operations with tenant isolation by organization.
 
-First, run the development server:
+## Main Features
+
+- Multi-tenant organization model (`organizations` + `organization_members`)
+- Student management (contacts, medical notes, lifecycle status)
+- Class management (schedule JSON, teacher assignment, enrollment tracking)
+- Show and production management (status, dates, venue, budget)
+- Staff management (`staff_members`) and per-show staff assignments
+- Casting workflow (`roles` + `castings`)
+- Dashboard metrics and calendar events
+- Admin panel with real counters and recent activity from database
+- Italian-first UI translations (`src/lib/translations/it.json`)
+
+## Tech Stack
+
+- Framework: Next.js 16 (App Router), React 19, TypeScript
+- UI: Tailwind CSS 4, Radix UI, Lucide icons, Sonner
+- Validation: Zod + React Hook Form
+- Data/Auth: Supabase (`@supabase/supabase-js`, `@supabase/ssr`)
+- Architecture: Clean-ish layered approach (domain -> services -> repositories -> Supabase)
+
+## Local Setup (5 minutes)
+
+### Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Supabase project (or equivalent PostgreSQL + Supabase Auth setup)
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment
+
+Create `.env.local`:
+
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+```
+
+### 3. Apply database SQL
+
+Run SQL files in this order in Supabase SQL editor:
+
+1. `database/schema.sql`
+2. `database/rls-policies.sql`
+3. `database/add_user_profiles.sql`
+4. `database/populate_user_profiles.sql`
+
+### 4. Start app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` - run development server
+- `npm run build` - production build
+- `npm run start` - start built app
+- `npm run lint` - run ESLint
 
-## Learn More
+Not configured yet (TODO):
 
-To learn more about Next.js, take a look at the following resources:
+- `npm test` (unit/integration)
+- `npm run e2e` (end-to-end)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment (Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deploy as a standard Next.js app on Vercel:
 
-## Deploy on Vercel
+1. Import repository in Vercel
+2. Set environment variables (same as `.env.local`)
+3. Ensure database schema + RLS SQL are already applied
+4. Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Required environment variables in production:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+## Security Notes
+
+- App stores PII (student contact and health-related notes). Treat data as sensitive.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; never expose to client code.
+- `admin-session` cookie is currently used for admin testing bypass in parts of auth flow. Remove or harden for strict production use.
+- Current RLS policies include broad temporary allowances in `organization_members` (see `database/rls-policies.sql`). Review and tighten before production.
+- Use HTTPS in production and rotate secrets regularly.
+
+## Documentation
+
+- `docs/ARCHITECTURE.md`
+- `docs/DATA_MODEL.md`
+- `docs/RUNBOOK.md`
+- `BACKEND_REPLACEMENT_GUIDE.md`
+
