@@ -127,12 +127,11 @@ export class SupabaseClassRepository extends BaseSupabaseRepository implements C
       .from('classes')
       .select(`
         *,
-        teacher:organization_members!classes_teacher_id_fkey (
+        teacher:staff_members!classes_teacher_id_fkey (
           id,
-          user_id,
-          first_name:users!inner(raw_user_meta_data->>'full_name'),
-          last_name:users!inner(raw_user_meta_data->>'full_name'),
-          email:users!inner(email)
+          first_name,
+          last_name,
+          email
         )
       `)
       .eq('id', id)
@@ -201,27 +200,15 @@ export class SupabaseClassRepository extends BaseSupabaseRepository implements C
     const classEntity = this.mapClassRowToEntity(row);
     const teacher = row.teacher ? {
       id: row.teacher.id,
-      firstName: this.extractFirstName(row.teacher.first_name),
-      lastName: this.extractLastName(row.teacher.last_name),
-      email: row.teacher.email,
+      firstName: row.teacher.first_name || '',
+      lastName: row.teacher.last_name || '',
+      email: row.teacher.email || '',
     } : undefined;
 
     return {
       ...classEntity,
       teacher,
     };
-  }
-
-  private extractFirstName(fullName: string): string {
-    if (!fullName) return '';
-    const parts = fullName.split(' ');
-    return parts[0] || '';
-  }
-
-  private extractLastName(fullName: string): string {
-    if (!fullName) return '';
-    const parts = fullName.split(' ');
-    return parts.length > 1 ? parts[parts.length - 1] : '';
   }
 
   private mapCreateDataToRow(data: CreateClassData, organizationId: string): Omit<ClassRow, 'id' | 'created_at' | 'updated_at'> {

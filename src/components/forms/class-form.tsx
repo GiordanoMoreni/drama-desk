@@ -18,24 +18,39 @@ interface ClassFormProps {
   initialData?: Partial<Class>;
   onSubmit: (data: CreateClassFormData | UpdateClassFormData) => Promise<void>;
   isLoading?: boolean;
-  organizationId: string;
   teachers?: Array<{ id: string; firstName: string; lastName: string; email: string }>;
 }
 
 const DAYS_OF_WEEK = [
-  { value: 'monday', label: 'Lunedì' },
-  { value: 'tuesday', label: 'Martedì' },
-  { value: 'wednesday', label: 'Mercoledì' },
-  { value: 'thursday', label: 'Giovedì' },
-  { value: 'friday', label: 'Venerdì' },
+  { value: 'monday', label: 'Lunedi' },
+  { value: 'tuesday', label: 'Martedi' },
+  { value: 'wednesday', label: 'Mercoledi' },
+  { value: 'thursday', label: 'Giovedi' },
+  { value: 'friday', label: 'Venerdi' },
   { value: 'saturday', label: 'Sabato' },
   { value: 'sunday', label: 'Domenica' },
 ] as const;
 
-export function ClassForm({ initialData, onSubmit, isLoading, organizationId, teachers = [] }: ClassFormProps) {
-  const [selectedDays, setSelectedDays] = useState<string[]>(
-    initialData?.schedule?.days || []
-  );
+type DayValue = (typeof DAYS_OF_WEEK)[number]['value'];
+const VALID_DAY_VALUES: DayValue[] = DAYS_OF_WEEK.map((day) => day.value);
+
+export function ClassForm({ initialData, onSubmit, isLoading, teachers = [] }: ClassFormProps) {
+  const toInputDate = (value?: Date | string) => {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+
+  const normalizeSchedule = (schedule?: Class['schedule']) => {
+    if (!schedule) return undefined;
+    return {
+      ...schedule,
+      days: (schedule.days || []).filter((day): day is DayValue => VALID_DAY_VALUES.includes(day as DayValue)),
+    };
+  };
+
+  const [selectedDays, setSelectedDays] = useState<string[]>(initialData?.schedule?.days || []);
 
   const isEditing = !!initialData?.id;
   const schema = isEditing ? updateClassSchema : createClassSchema;
@@ -55,22 +70,20 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
       maxStudents: initialData?.maxStudents || undefined,
       ageRangeMin: initialData?.ageRangeMin || undefined,
       ageRangeMax: initialData?.ageRangeMax || undefined,
-      schedule: initialData?.schedule as any || undefined,
-      startDate: initialData?.startDate ? initialData.startDate.toISOString().split('T')[0] : '',
-      endDate: initialData?.endDate ? initialData.endDate.toISOString().split('T')[0] : '',
+      schedule: normalizeSchedule(initialData?.schedule),
+      startDate: toInputDate(initialData?.startDate),
+      endDate: toInputDate(initialData?.endDate),
     },
   });
 
-  const handleDayToggle = (day: string) => {
+  const handleDayToggle = (day: DayValue) => {
     const newSelectedDays = selectedDays.includes(day)
       ? selectedDays.filter(d => d !== day)
       : [...selectedDays, day];
 
     setSelectedDays(newSelectedDays);
-
-    // Update form value
     setValue('schedule', {
-      days: newSelectedDays as any,
+      days: newSelectedDays as DayValue[],
       startTime: watch('schedule')?.startTime || '',
       endTime: watch('schedule')?.endTime || '',
       timezone: watch('schedule')?.timezone,
@@ -78,11 +91,16 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
   };
 
   const handleScheduleChange = (field: 'startTime' | 'endTime' | 'timezone', value: string) => {
-    const currentSchedule = watch('schedule') || { days: selectedDays };
+    const currentSchedule = watch('schedule') || {
+      days: selectedDays as DayValue[],
+      startTime: '',
+      endTime: '',
+      timezone: '',
+    };
     setValue('schedule', {
       ...currentSchedule,
       [field]: value,
-    } as any);
+    });
   };
 
   const onFormSubmit = async (data: CreateClassFormData | UpdateClassFormData) => {
@@ -91,48 +109,29 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8 w-full">
-      {/* Basic Information */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-2xl">{t('common.edit')}</CardTitle>
-          <CardDescription className="text-base mt-2">
-            {t('classes.description')}
-          </CardDescription>
+          <CardTitle className="text-2xl">
+            {isEditing ? t('classes.editClass') : t('classes.addNewClass')}
+          </CardTitle>
+          <CardDescription className="text-base mt-2">{t('classes.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium">{t('classes.className')} *</Label>
-            <Input
-              id="name"
-              {...register('name')}
-              placeholder={t('classes.className')}
-              className="h-10"
-            />
-            {errors.name && (
-              <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
-            )}
+            <Input id="name" {...register('name')} placeholder={t('classes.className')} className="h-10" />
+            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium">{t('classes.description')}</Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              placeholder={t('classes.description')}
-              rows={3}
-              className="resize-none"
-            />
-            {errors.description && (
-              <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
-            )}
+            <Textarea id="description" {...register('description')} placeholder={t('classes.description')} rows={3} className="resize-none" />
+            {errors.description && <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="teacherId" className="text-sm font-medium">{t('classes.teacher')}</Label>
-            <Select
-              value={watch('teacherId') || ''}
-              onValueChange={(value) => setValue('teacherId', value === 'none' ? undefined : value)}
-            >
+            <Select value={watch('teacherId') || ''} onValueChange={(value) => setValue('teacherId', value === 'none' ? undefined : value)}>
               <SelectTrigger className="h-10">
                 <SelectValue placeholder={t('classes.teacher')} />
               </SelectTrigger>
@@ -145,123 +144,70 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
                 ))}
               </SelectContent>
             </Select>
-            {errors.teacherId && (
-              <p className="text-sm text-red-600 mt-1">{errors.teacherId.message}</p>
-            )}
+            {errors.teacherId && <p className="text-sm text-red-600 mt-1">{errors.teacherId.message}</p>}
           </div>
         </CardContent>
       </Card>
 
-      {/* Class Details */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-2xl">Class Details</CardTitle>
-          <CardDescription className="text-base mt-2">
-            Configure class capacity and age restrictions.
-          </CardDescription>
+          <CardTitle className="text-2xl">Dettagli classe</CardTitle>
+          <CardDescription className="text-base mt-2">Imposta capienza, fascia di eta e durata della classe.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="maxStudents" className="text-sm font-medium">Maximum Students</Label>
-            <Input
-              id="maxStudents"
-              type="number"
-              {...register('maxStudents', { valueAsNumber: true })}
-              placeholder="Leave empty for unlimited"
-              className="h-10"
-            />
-            {errors.maxStudents && (
-              <p className="text-sm text-red-600 mt-1">{errors.maxStudents.message}</p>
-            )}
+            <Label htmlFor="maxStudents" className="text-sm font-medium">Numero massimo studenti</Label>
+            <Input id="maxStudents" type="number" {...register('maxStudents', { valueAsNumber: true })} placeholder="Lascia vuoto per nessun limite" className="h-10" />
+            {errors.maxStudents && <p className="text-sm text-red-600 mt-1">{errors.maxStudents.message}</p>}
           </div>
 
           <div>
-            <Label className="text-sm font-medium mb-3 block">Age Range</Label>
+            <Label className="text-sm font-medium mb-3 block">Fascia di eta</Label>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ageRangeMin" className="text-xs text-gray-600">Min Age</Label>
-                <Input
-                  id="ageRangeMin"
-                  type="number"
-                  {...register('ageRangeMin', { valueAsNumber: true })}
-                  placeholder="Min age"
-                  className="h-10"
-                />
-                {errors.ageRangeMin && (
-                  <p className="text-sm text-red-600 mt-1">{errors.ageRangeMin.message}</p>
-                )}
+                <Label htmlFor="ageRangeMin" className="text-xs text-gray-600">Eta minima</Label>
+                <Input id="ageRangeMin" type="number" {...register('ageRangeMin', { valueAsNumber: true })} placeholder="Eta minima" className="h-10" />
+                {errors.ageRangeMin && <p className="text-sm text-red-600 mt-1">{errors.ageRangeMin.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ageRangeMax" className="text-xs text-gray-600">Max Age</Label>
-                <Input
-                  id="ageRangeMax"
-                  type="number"
-                  {...register('ageRangeMax', { valueAsNumber: true })}
-                  placeholder="Max age"
-                  className="h-10"
-                />
-                {errors.ageRangeMax && (
-                  <p className="text-sm text-red-600 mt-1">{errors.ageRangeMax.message}</p>
-                )}
+                <Label htmlFor="ageRangeMax" className="text-xs text-gray-600">Eta massima</Label>
+                <Input id="ageRangeMax" type="number" {...register('ageRangeMax', { valueAsNumber: true })} placeholder="Eta massima" className="h-10" />
+                {errors.ageRangeMax && <p className="text-sm text-red-600 mt-1">{errors.ageRangeMax.message}</p>}
               </div>
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-medium mb-3 block">Class Duration</Label>
+            <Label className="text-sm font-medium mb-3 block">Durata classe</Label>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate" className="text-xs text-gray-600">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  {...register('startDate')}
-                  className="h-10"
-                />
-                {errors.startDate && (
-                  <p className="text-sm text-red-600 mt-1">{errors.startDate.message}</p>
-                )}
+                <Label htmlFor="startDate" className="text-xs text-gray-600">Data inizio</Label>
+                <Input id="startDate" type="date" {...register('startDate')} className="h-10" />
+                {errors.startDate && <p className="text-sm text-red-600 mt-1">{errors.startDate.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate" className="text-xs text-gray-600">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  {...register('endDate')}
-                  className="h-10"
-                />
-                {errors.endDate && (
-                  <p className="text-sm text-red-600 mt-1">{errors.endDate.message}</p>
-                )}
+                <Label htmlFor="endDate" className="text-xs text-gray-600">Data fine</Label>
+                <Input id="endDate" type="date" {...register('endDate')} className="h-10" />
+                {errors.endDate && <p className="text-sm text-red-600 mt-1">{errors.endDate.message}</p>}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Schedule */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-2xl">Schedule</CardTitle>
-          <CardDescription className="text-base mt-2">
-            Set the class schedule (optional).
-          </CardDescription>
+          <CardTitle className="text-2xl">Programmazione</CardTitle>
+          <CardDescription className="text-base mt-2">Imposta la ricorrenza settimanale della classe (opzionale).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <Label className="text-sm font-medium block">Days of the Week</Label>
+            <Label className="text-sm font-medium block">I giorni della settimana</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {DAYS_OF_WEEK.map((day) => (
                 <div key={day.value} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Checkbox
-                    id={day.value}
-                    checked={selectedDays.includes(day.value)}
-                    onCheckedChange={() => handleDayToggle(day.value)}
-                    className="w-5 h-5"
-                  />
-                  <Label htmlFor={day.value} className="text-sm font-medium cursor-pointer flex-1">
-                    {day.label}
-                  </Label>
+                  <Checkbox id={day.value} checked={selectedDays.includes(day.value)} onCheckedChange={() => handleDayToggle(day.value)} className="w-5 h-5" />
+                  <Label htmlFor={day.value} className="text-sm font-medium cursor-pointer flex-1">{day.label}</Label>
                 </div>
               ))}
             </div>
@@ -269,55 +215,31 @@ export function ClassForm({ initialData, onSubmit, isLoading, organizationId, te
 
           {selectedDays.length > 0 && (
             <div className="space-y-4 pt-6 border-t">
-              <Label className="text-sm font-medium block">Class Times</Label>
+              <Label className="text-sm font-medium block">Orari lezione</Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startTime" className="text-xs text-gray-600">Start Time</Label>
-                  <Input
-                    id="startTime"
-                    type="time"
-                    value={watch('schedule')?.startTime || ''}
-                    onChange={(e) => handleScheduleChange('startTime', e.target.value)}
-                    className="h-10"
-                  />
+                  <Label htmlFor="startTime" className="text-xs text-gray-600">Ora inizio</Label>
+                  <Input id="startTime" type="time" value={watch('schedule')?.startTime || ''} onChange={(e) => handleScheduleChange('startTime', e.target.value)} className="h-10" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endTime" className="text-xs text-gray-600">End Time</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    value={watch('schedule')?.endTime || ''}
-                    onChange={(e) => handleScheduleChange('endTime', e.target.value)}
-                    className="h-10"
-                  />
+                  <Label htmlFor="endTime" className="text-xs text-gray-600">Ora fine</Label>
+                  <Input id="endTime" type="time" value={watch('schedule')?.endTime || ''} onChange={(e) => handleScheduleChange('endTime', e.target.value)} className="h-10" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="timezone" className="text-xs text-gray-600">Timezone</Label>
-                  <Input
-                    id="timezone"
-                    placeholder="e.g., Europe/Rome"
-                    value={watch('schedule')?.timezone || ''}
-                    onChange={(e) => handleScheduleChange('timezone', e.target.value)}
-                    className="h-10"
-                  />
+                  <Label htmlFor="timezone" className="text-xs text-gray-600">Fuso orario</Label>
+                  <Input id="timezone" placeholder="es. Europe/Rome" value={watch('schedule')?.timezone || ''} onChange={(e) => handleScheduleChange('timezone', e.target.value)} className="h-10" />
                 </div>
               </div>
             </div>
           )}
 
-          {errors.schedule && (
-            <p className="text-sm text-red-600 mt-4">{errors.schedule.message}</p>
-          )}
+          {errors.schedule && <p className="text-sm text-red-600 mt-4">{errors.schedule.message}</p>}
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-3 pt-4 border-t sticky bottom-0 bg-white">
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="min-w-[160px] h-10 text-base"
-        >
-          {isLoading ? 'Saving...' : isEditing ? 'Update Class' : 'Create Class'}
+        <Button type="submit" disabled={isLoading} className="min-w-[160px] h-10 text-base">
+          {isLoading ? 'Salvataggio...' : isEditing ? 'Aggiorna classe' : 'Crea classe'}
         </Button>
       </div>
     </form>

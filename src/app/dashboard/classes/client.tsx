@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Class, OrganizationMember } from '@/domain/entities';
+import { Class, StaffMember } from '@/domain/entities';
 import { CreateClassFormData, UpdateClassFormData } from '@/lib/validations/class';
 import { ClassForm } from '@/components/forms/class-form';
 import { Button } from '@/components/ui/button';
@@ -26,9 +26,19 @@ interface ClassesResponse {
   totalPages: number;
 }
 
+const DAY_LABELS: Record<string, string> = {
+  monday: 'Lunedi',
+  tuesday: 'Martedi',
+  wednesday: 'Mercoledi',
+  thursday: 'Giovedi',
+  friday: 'Venerdi',
+  saturday: 'Sabato',
+  sunday: 'Domenica',
+};
+
 export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
   const [classes, setClasses] = useState<Class[]>([]);
-  const [teachers, setTeachers] = useState<OrganizationMember[]>([]);
+  const [teachers, setTeachers] = useState<Array<{ id: string; firstName: string; lastName: string; email: string }>>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,16 +71,23 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
 
   const fetchTeachers = async () => {
     try {
-      // Fetch organization members with teacher/staff/admin roles
-      const response = await fetch('/api/organizations/members');
-      if (!response.ok) throw new Error('Failed to fetch teachers');
+      const staffResponse = await fetch('/api/staff?limit=200');
+      if (!staffResponse.ok) throw new Error('Failed to fetch staff');
+      const staffPayload = await staffResponse.json();
+      const staffMembers: StaffMember[] = staffPayload.data || [];
 
-      const data = await response.json();
-      const filteredTeachers = data.filter((member: OrganizationMember) =>
-        member.role === 'teacher' || member.role === 'staff' || member.role === 'admin'
-      );
-      console.log('Fetched teachers:', filteredTeachers);
-      setTeachers(filteredTeachers);
+      const teacherOptions = staffMembers
+        .filter((staff) => staff.isActive)
+        .map((staff) => {
+          return {
+            id: staff.id, // teacher_id now stores staff_members.id
+            firstName: staff.firstName,
+            lastName: staff.lastName,
+            email: staff.email || '',
+          };
+        });
+
+      setTeachers(teacherOptions);
     } catch (error) {
       console.error('Error fetching teachers:', error);
       // For demo purposes, we'll use empty array
@@ -157,10 +174,10 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
     }
   };
 
-  const formatSchedule = (schedule: any) => {
-    if (!schedule) return t('common.loading');
+  const formatSchedule = (schedule: Class['schedule']) => {
+    if (!schedule) return 'Nessun orario';
 
-    const days = schedule.days?.map((day: string) => day.charAt(0).toUpperCase() + day.slice(1)).join(', ') || '';
+    const days = schedule.days?.map((day: string) => DAY_LABELS[day] || day).join(', ') || '';
     const time = schedule.startTime && schedule.endTime ? `${schedule.startTime} - ${schedule.endTime}` : '';
 
     return `${days} ${time}`.trim();
@@ -185,13 +202,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
             <ClassForm
               onSubmit={handleCreateClass}
               isLoading={isLoading}
-              organizationId={organizationId}
-              teachers={teachers.map(m => ({
-                id: m.id,
-                firstName: m.firstName || '',
-                lastName: m.lastName || '',
-                email: m.email || '',
-              }))}
+              teachers={teachers}
             />
           </DialogContent>
         </Dialog>
@@ -242,7 +253,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
                 <TableHead>Orario</TableHead>
                 <TableHead>Iscritti</TableHead>
                 <TableHead>{t('classes.status')}</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -258,9 +269,9 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
                   </TableCell>
                   <TableCell>
                     {classItem.teacherId ? (
-                      <Badge variant="outline">Teacher Assigned</Badge>
+                      <Badge variant="outline">Insegnante assegnato</Badge>
                     ) : (
-                      <Badge variant="secondary">No Teacher</Badge>
+                      <Badge variant="secondary">Nessun insegnante</Badge>
                     )}
                   </TableCell>
                   <TableCell>
@@ -276,7 +287,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
                   </TableCell>
                   <TableCell>
                     <Badge variant={classItem.isActive ? 'default' : 'secondary'}>
-                      {classItem.isActive ? 'Active' : 'Inactive'}
+                      {classItem.isActive ? 'Attiva' : 'Inattiva'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -303,7 +314,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">
                     <div className="text-muted-foreground">
-                      No classes found. Create your first class to get started.
+                      Nessuna classe trovata. Crea la tua prima classe per iniziare.
                     </div>
                   </TableCell>
                 </TableRow>
@@ -322,13 +333,7 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
               initialData={editingClass}
               onSubmit={handleUpdateClass}
               isLoading={isLoading}
-              organizationId={organizationId}
-              teachers={teachers.map(t => ({
-                id: t.id,
-                firstName: t.firstName || '',
-                lastName: t.lastName || '',
-                email: t.email || '',
-              }))}
+              teachers={teachers}
             />
           )}
         </DialogContent>

@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS classes (
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    teacher_id UUID REFERENCES organization_members(id),
+    teacher_id UUID,
     max_students INTEGER,
     age_range_min INTEGER,
     age_range_max INTEGER,
@@ -156,6 +156,27 @@ CREATE TABLE IF NOT EXISTS show_staff_assignments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(show_id, staff_member_id)
 );
+
+-- Ensure classes.teacher_id references staff_members (for both fresh and existing databases)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.table_constraints
+        WHERE table_name = 'classes'
+          AND constraint_name = 'classes_teacher_id_fkey'
+          AND constraint_type = 'FOREIGN KEY'
+    ) THEN
+        ALTER TABLE classes DROP CONSTRAINT classes_teacher_id_fkey;
+    END IF;
+EXCEPTION
+    WHEN undefined_table THEN
+        NULL;
+END $$;
+
+ALTER TABLE classes
+    ADD CONSTRAINT classes_teacher_id_fkey
+    FOREIGN KEY (teacher_id) REFERENCES staff_members(id) ON DELETE SET NULL;
 
 -- Roles (Character roles in shows)
 CREATE TABLE IF NOT EXISTS roles (
