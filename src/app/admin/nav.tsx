@@ -15,9 +15,9 @@ import { t } from '@/lib/translations';
 const navigation = [
   { name: t('admin.adminDashboard'), href: '/admin', icon: BarChart3 },
   { name: t('organizations.title'), href: '/admin/organizations', icon: Building2 },
-  { name: t('admin.totalUsers').replace('Utenti Totali', 'Utenti'), href: '/admin/users', icon: Users },
-  { name: 'Inviti', href: '/admin/invitations', icon: UserPlus },
-  { name: 'Impostazioni', href: '/admin/settings', icon: Settings },
+  { name: t('admin.usersNav'), href: '/admin/users', icon: Users },
+  { name: t('admin.invitationsNav'), href: '/admin/invitations', icon: UserPlus },
+  { name: t('admin.settingsNav'), href: '/admin/settings', icon: Settings },
 ];
 
 export default function AdminNav() {

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Plus, ArrowRight, Building2 } from 'lucide-react';
 import Link from 'next/link';
+import DashboardNav from './nav';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -16,32 +17,34 @@ export default async function DashboardPage() {
   }
 
   const organizations = await getUserOrganizations(user.id);
+  const currentOrg = organizations[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Drama Desk</h1>
-              <p className="text-gray-600 mt-1">Le tue associazioni teatrali</p>
-            </div>
-            <Link href="/organizations/select?from=dashboard">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Nuova Associazione
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <DashboardNav
+        organizationName={currentOrg?.organizationName || 'Le tue associazioni'}
+        organizationId={currentOrg?.organizationId}
+        userEmail={user.email}
+        userRole={currentOrg?.userRole || 'staff'}
+        userOrganizations={organizations}
+        showSidebar={false}
+        homeHref="/dashboard"
+        profileHref={currentOrg ? `/dashboard/${currentOrg.organizationId}/profile` : '/dashboard/profile'}
+      />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24">
         {organizations.length > 0 ? (
           <div>
             <div className="mb-8">
+              <div className="flex justify-end mb-6">
+                <Link href="/organizations/select?from=dashboard">
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Nuova Associazione
+                  </Button>
+                </Link>
+              </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Seleziona un'associazione
               </h2>
