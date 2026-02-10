@@ -1,0 +1,973 @@
+openapi: 3.0.3
+info:
+  title: Drama Desk API
+  version: 1.0.0
+  description: >
+    Route handlers in src/app/api. Auth via Supabase session cookies.
+    Tenant-scoped routes require current-organization cookie.
+servers:
+  - url: http://localhost:3000
+security:
+  - SupabaseSessionCookie: []
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Organizations
+  - name: Dashboard
+  - name: Calendar
+  - name: Students
+  - name: Classes
+  - name: Shows
+  - name: Staff
+  - name: Admin
+  - name: Health
+paths:
+  /api/test:
+    get:
+      tags: [Health]
+      security: []
+      summary: Test endpoint
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResponse'
+  /api/auth/signout:
+    post:
+      tags: [Auth]
+      summary: Sign out
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/profile:
+    get:
+      tags: [Profile]
+      summary: Current user + profile
+      responses:
+        '200':
+          description: Profile payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  profile:
+                    $ref: '#/components/schemas/UserProfile'
+    put:
+      tags: [Profile]
+      summary: Update profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/Error'
+  /api/organization/set-current:
+    post:
+      tags: [Organizations]
+      security: []
+      summary: Set current organization cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [organizationId]
+              properties:
+                organizationId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/Error'
+  /api/organizations:
+    get:
+      tags: [Organizations]
+      summary: List organizations
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/IsActive'
+      responses:
+        '200':
+          description: Paginated organizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganization'
+    post:
+      tags: [Organizations]
+      summary: Create organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreateInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+  /api/organizations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Organizations]
+      summary: Get organization
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+    put:
+      tags: [Organizations]
+      summary: Update organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdateInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+    delete:
+      tags: [Organizations]
+      summary: Delete organization
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/organizations/members:
+    get:
+      tags: [Organizations]
+      summary: Members of current organization
+      parameters:
+        - $ref: '#/components/parameters/CurrentOrganizationCookie'
+      responses:
+        '200':
+          description: Member list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizationMember'
+  /api/dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Tenant dashboard (placeholder)
+      parameters:
+        - $ref: '#/components/parameters/CurrentOrganizationCookie'
+      responses:
+        '200':
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetrics'
+  /api/calendar/events:
+    get:
+      tags: [Calendar]
+      summary: Month events from classes and shows
+      parameters:
+        - $ref: '#/components/parameters/CurrentOrganizationCookie'
+        - name: month
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 12 }
+        - name: year
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEvent'
+  /api/students:
+    get:
+      tags: [Students]
+      summary: List students
+      parameters:
+        - $ref: '#/components/parameters/CurrentOrganizationCookie'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/IsActive'
+        - name: classId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Paginated students
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStudent'
+    post:
+      tags: [Students]
+      summary: Create student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreateInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+  /api/students/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+      - $ref: '#/components/parameters/CurrentOrganizationCookie'
+    get:
+      tags: [Students]
+      summary: Get student
+      responses:
+        '200':
+          description: Student
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+    put:
+      tags: [Students]
+      summary: Update student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdateInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+    delete:
+      tags: [Students]
+      summary: Delete student
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/students/{id}/classes:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+      - $ref: '#/components/parameters/CurrentOrganizationCookie'
+    get:
+      tags: [Students]
+      summary: Get class ids for student
+      responses:
+        '200':
+          description: Class ids
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classIds:
+                    type: array
+                    items: { type: string, format: uuid }
+    put:
+      tags: [Students]
+      summary: Replace class assignments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classIds]
+              properties:
+                classIds:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/classes:
+    get:
+      tags: [Classes]
+      summary: List classes
+      parameters:
+        - $ref: '#/components/parameters/CurrentOrganizationCookie'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/IsActive'
+        - name: teacherId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Paginated classes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedClass'
+    post:
+      tags: [Classes]
+      summary: Create class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassCreateInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+  /api/classes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+      - $ref: '#/components/parameters/CurrentOrganizationCookie'
+    get:
+      tags: [Classes]
+      summary: Get class
+      responses:
+        '200':
+          description: Class
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+    put:
+      tags: [Classes]
+      summary: Update class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassUpdateInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+    delete:
+      tags: [Classes]
+      summary: Delete class
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/shows:
+    get:
+      tags: [Shows]
+      summary: List shows
+      parameters:
+        - $ref: '#/components/parameters/CurrentOrganizationCookie'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/IsActive'
+        - name: directorId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/ShowStatus' }
+      responses:
+        '200':
+          description: Paginated shows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShow'
+    post:
+      tags: [Shows]
+      summary: Create show
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShowCreateInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Show'
+  /api/shows/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+      - $ref: '#/components/parameters/CurrentOrganizationCookie'
+    get:
+      tags: [Shows]
+      summary: Get show (with staffAssignments)
+      responses:
+        '200':
+          description: Show
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Show'
+                  - type: object
+                    properties:
+                      staffAssignments:
+                        type: array
+                        items: { $ref: '#/components/schemas/ShowStaffAssignment' }
+    put:
+      tags: [Shows]
+      summary: Update show
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShowUpdateInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Show'
+    delete:
+      tags: [Shows]
+      summary: Delete show
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/staff:
+    get:
+      tags: [Staff]
+      summary: List staff
+      parameters:
+        - $ref: '#/components/parameters/CurrentOrganizationCookie'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/IsActive'
+      responses:
+        '200':
+          description: Paginated staff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStaff'
+    post:
+      tags: [Staff]
+      summary: Create staff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreateInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffMember'
+  /api/staff/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+      - $ref: '#/components/parameters/CurrentOrganizationCookie'
+    get:
+      tags: [Staff]
+      summary: Get staff
+      responses:
+        '200':
+          description: Staff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffMember'
+    put:
+      tags: [Staff]
+      summary: Update staff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffUpdateInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffMember'
+    delete:
+      tags: [Staff]
+      summary: Delete staff
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Admin dashboard
+      description: WIP. Currently mock data.
+      responses:
+        '200':
+          description: Admin metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDashboard'
+        '401':
+          $ref: '#/components/responses/Error'
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: Admin users (org memberships + profiles)
+      responses:
+        '200':
+          description: Membership records
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OrganizationMemberWithProfile' }
+  /api/admin/invitations:
+    get:
+      tags: [Admin]
+      summary: Pending invitations
+      responses:
+        '200':
+          description: Invitations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OrganizationMemberWithProfile' }
+  /api/admin/organizations:
+    get:
+      tags: [Admin]
+      summary: Admin organizations with counts
+      responses:
+        '200':
+          description: Organizations + counters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/Organization'
+                    - type: object
+                      properties:
+                        memberCount: { type: integer }
+                        adminCount: { type: integer }
+components:
+  securitySchemes:
+    SupabaseSessionCookie:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+      description: Supabase session cookie (and related auth cookies).
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, default: 10 }
+    Search:
+      name: search
+      in: query
+      schema: { type: string }
+    IsActive:
+      name: isActive
+      in: query
+      schema: { type: boolean }
+    CurrentOrganizationCookie:
+      name: current-organization
+      in: cookie
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Success:
+      description: Success response
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/SuccessResponse' }
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        details: { type: string }
+    TestResponse:
+      type: object
+      properties:
+        message: { type: string }
+        timestamp: { type: string, format: date-time }
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+    UserProfile:
+      type: object
+      nullable: true
+      properties:
+        id: { type: string }
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { type: string, format: email }
+    ProfileUpdateInput:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    Organization:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string, nullable: true }
+        isActive: { type: boolean }
+    OrganizationCreateInput:
+      type: object
+      required: [name, slug]
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        contactEmail: { type: string, format: email }
+        websiteUrl: { type: string, format: uri }
+    OrganizationUpdateInput:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        logoUrl: { type: string, format: uri }
+        websiteUrl: { type: string, format: uri }
+        contactEmail: { type: string, format: email }
+        contactPhone: { type: string }
+        address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postalCode: { type: string }
+        country: { type: string }
+        isActive: { type: boolean }
+    OrganizationMember:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        organization_id: { type: string, format: uuid }
+        role: { type: string, enum: [admin, teacher, staff] }
+        is_active: { type: boolean }
+        invited_at: { type: string, format: date-time }
+        joined_at: { type: string, format: date-time, nullable: true }
+    OrganizationMemberWithProfile:
+      allOf:
+        - $ref: '#/components/schemas/OrganizationMember'
+        - type: object
+          properties:
+            organizations:
+              type: object
+              properties:
+                id: { type: string, format: uuid }
+                name: { type: string }
+                slug: { type: string }
+            user_profiles:
+              type: object
+              properties:
+                first_name: { type: string }
+                last_name: { type: string }
+                email: { type: string, format: email }
+    Student:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email, nullable: true }
+        isActive: { type: boolean }
+    StudentCreateInput:
+      type: object
+      required: [organizationId, firstName, lastName]
+      properties:
+        organizationId: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        dateOfBirth: { type: string, format: date }
+        gradeLevel: { type: string }
+        emergencyContactName: { type: string }
+        emergencyContactPhone: { type: string }
+        medicalInfo: { type: string }
+        notes: { type: string }
+    StudentUpdateInput:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        dateOfBirth: { type: string, format: date }
+        gradeLevel: { type: string }
+        emergencyContactName: { type: string }
+        emergencyContactPhone: { type: string }
+        medicalInfo: { type: string }
+        notes: { type: string }
+        isActive: { type: boolean }
+    ClassSchedule:
+      type: object
+      properties:
+        days:
+          type: array
+          items: { type: string, enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday] }
+        startTime: { type: string }
+        endTime: { type: string }
+        timezone: { type: string }
+    Class:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        name: { type: string }
+        teacherId: { type: string, format: uuid, nullable: true }
+        schedule: { $ref: '#/components/schemas/ClassSchedule' }
+        startDate: { type: string, format: date, nullable: true }
+        endDate: { type: string, format: date, nullable: true }
+    ClassCreateInput:
+      type: object
+      required: [organizationId, name]
+      properties:
+        organizationId: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        teacherId: { type: string, format: uuid, nullable: true }
+        maxStudents: { type: integer, nullable: true }
+        ageRangeMin: { type: integer, nullable: true }
+        ageRangeMax: { type: integer, nullable: true }
+        schedule: { $ref: '#/components/schemas/ClassSchedule' }
+        startDate: { type: string, format: date, nullable: true }
+        endDate: { type: string, format: date, nullable: true }
+    ClassUpdateInput:
+      allOf:
+        - $ref: '#/components/schemas/ClassCreateInput'
+    ShowStatus:
+      type: string
+      enum: [planning, rehearsing, performing, completed, cancelled]
+    ShowStaffRole:
+      type: string
+      enum: [insegnante, regista, tecnico, assistente, drammaturgo, coreografo, scenografo, costumista, vocal_coach, movimento_scenico]
+    ShowStaffAssignment:
+      type: object
+      required: [staffMemberId, role]
+      properties:
+        staffMemberId: { type: string, format: uuid }
+        role: { $ref: '#/components/schemas/ShowStaffRole' }
+        notes: { type: string }
+    Show:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        title: { type: string }
+        directorId: { type: string, format: uuid, nullable: true }
+        startDate: { type: string, format: date, nullable: true }
+        endDate: { type: string, format: date, nullable: true }
+        status: { $ref: '#/components/schemas/ShowStatus' }
+    ShowCreateInput:
+      type: object
+      required: [organizationId, title]
+      properties:
+        organizationId: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        directorId: { type: string, format: uuid, nullable: true }
+        startDate: { type: string, format: date, nullable: true }
+        endDate: { type: string, format: date, nullable: true }
+        venue: { type: string }
+        budget: { type: number, nullable: true }
+        staffAssignments:
+          type: array
+          items: { $ref: '#/components/schemas/ShowStaffAssignment' }
+    ShowUpdateInput:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        directorId: { type: string, format: uuid, nullable: true }
+        startDate: { type: string, format: date, nullable: true }
+        endDate: { type: string, format: date, nullable: true }
+        venue: { type: string }
+        budget: { type: number, nullable: true }
+        status: { $ref: '#/components/schemas/ShowStatus' }
+        isActive: { type: boolean }
+        staffAssignments:
+          type: array
+          items: { $ref: '#/components/schemas/ShowStaffAssignment' }
+    StaffMember:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email, nullable: true }
+        primaryRole: { $ref: '#/components/schemas/ShowStaffRole' }
+        isActive: { type: boolean }
+    StaffCreateInput:
+      type: object
+      required: [organizationId, firstName, lastName, primaryRole]
+      properties:
+        organizationId: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email, nullable: true }
+        phone: { type: string, nullable: true }
+        primaryRole: { $ref: '#/components/schemas/ShowStaffRole' }
+        notes: { type: string, nullable: true }
+    StaffUpdateInput:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email, nullable: true }
+        phone: { type: string, nullable: true }
+        primaryRole: { $ref: '#/components/schemas/ShowStaffRole' }
+        notes: { type: string, nullable: true }
+        isActive: { type: boolean }
+    CalendarEvent:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        type: { type: string, enum: [class, show] }
+        date: { type: string, format: date }
+        startTime: { type: string, nullable: true }
+    DashboardMetrics:
+      type: object
+      properties:
+        totalStudents: { type: integer }
+        activeClasses: { type: integer }
+        upcomingShows: { type: integer }
+        studentStats: { type: object, additionalProperties: true }
+        classStats: { type: object, additionalProperties: true }
+        showStats: { type: object, additionalProperties: true }
+        recentActivity:
+          type: array
+          items: { type: object, additionalProperties: true }
+    AdminDashboard:
+      type: object
+      properties:
+        totalOrganizations: { type: integer }
+        totalUsers: { type: integer }
+        pendingInvitations: { type: integer }
+        activeSessions: { type: integer }
+        recentActivity:
+          type: array
+          items: { type: object, additionalProperties: true }
+    PaginatedStudent:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Student' }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        totalPages: { type: integer }
+    PaginatedClass:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Class' }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        totalPages: { type: integer }
+    PaginatedShow:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Show' }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        totalPages: { type: integer }
+    PaginatedStaff:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/StaffMember' }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        totalPages: { type: integer }
+    PaginatedOrganization:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Organization' }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        totalPages: { type: integer }
