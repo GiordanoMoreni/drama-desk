@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Building2, Mail, MapPin, Edit, X, Check, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { t } from '@/lib/translations';
+import { StaffMember } from '@/domain/entities/staff';
 
 interface OrganizationPageClientProps {
   organization: Organization;
@@ -23,11 +25,20 @@ export function OrganizationPageClient({ organization, isAdmin }: OrganizationPa
   const [editName, setEditName] = useState(organization.name);
   const [editDescription, setEditDescription] = useState(organization.description || '');
   const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<OrganizationMember | null>(null);
+  const [selectedStaffMemberId, setSelectedStaffMemberId] = useState('');
+  const [isSavingLink, setIsSavingLink] = useState(false);
 
   useEffect(() => {
     fetchMembers();
-  }, []);
+    if (isAdmin) {
+      fetchStaffMembers();
+    }
+  }, [isAdmin]);
 
   const fetchMembers = async () => {
     try {
@@ -41,6 +52,94 @@ export function OrganizationPageClient({ organization, isAdmin }: OrganizationPa
       console.error('Error fetching members:', error);
     } finally {
       setIsLoadingMembers(false);
+    }
+  };
+
+  const fetchStaffMembers = async () => {
+    try {
+      setIsLoadingStaff(true);
+      const response = await fetch('/api/staff?isActive=true&limit=200');
+      if (!response.ok) {
+        throw new Error('Errore nel caricamento staff');
+      }
+
+      const payload = await response.json();
+      setStaffMembers(payload.data || []);
+    } catch (error) {
+      console.error('Error fetching staff members:', error);
+      toast.error('Impossibile caricare lo staff disponibile');
+    } finally {
+      setIsLoadingStaff(false);
+    }
+  };
+
+  const openLinkDialog = (member: OrganizationMember) => {
+    setSelectedMember(member);
+    setSelectedStaffMemberId(member.staffMemberId || '');
+    setIsLinkDialogOpen(true);
+  };
+
+  const handleLinkStaff = async () => {
+    if (!selectedMember) return;
+
+    if (!selectedStaffMemberId) {
+      toast.error('Seleziona un membro staff da collegare');
+      return;
+    }
+
+    try {
+      setIsSavingLink(true);
+      const response = await fetch(`/api/organizations/members/${selectedMember.id}/staff-link`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ staffMemberId: selectedStaffMemberId }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Errore nel collegamento staff');
+      }
+
+      setMembers(prev => prev.map(member => (
+        member.id === selectedMember.id ? { ...member, ...data } : member
+      )));
+
+      toast.success('Staff collegato con successo');
+      setIsLinkDialogOpen(false);
+      setSelectedMember(null);
+      setSelectedStaffMemberId('');
+      await fetchMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Errore nel collegamento staff');
+    } finally {
+      setIsSavingLink(false);
+    }
+  };
+
+  const handleUnlinkStaff = async (member: OrganizationMember) => {
+    try {
+      setIsSavingLink(true);
+      const response = await fetch(`/api/organizations/members/${member.id}/staff-link`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Errore nello scollegamento staff');
+      }
+
+      setMembers(prev => prev.map(current => (
+        current.id === member.id ? { ...current, ...data } : current
+      )));
+
+      toast.success('Staff scollegato con successo');
+      await fetchMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Errore nello scollegamento staff');
+    } finally {
+      setIsSavingLink(false);
     }
   };
 
@@ -283,16 +382,87 @@ export function OrganizationPageClient({ organization, isAdmin }: OrganizationPa
                     <Badge className="mt-2" variant={member.role === 'admin' ? 'default' : member.role === 'teacher' ? 'secondary' : 'outline'}>
                       {member.role === 'admin' ? 'Admin' : member.role === 'teacher' ? 'Insegnante' : 'Staff'}
                     </Badge>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Collegato a staff: <span className="font-medium">{member.staffMemberId ? 'Sì' : 'No'}</span>
+                    </p>
+                    {member.staffMemberId && (
+                      <p className="text-xs text-gray-500">
+                        {member.linkedStaffName || member.staffMemberId}
+                        {member.linkedStaffEmail ? ` - ${member.linkedStaffEmail}` : ''}
+                      </p>
+                    )}
                   </div>
-                  <Badge variant={member.isActive ? 'default' : 'secondary'}>
-                    {member.isActive ? 'Attivo' : 'Inattivo'}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={member.isActive ? 'default' : 'secondary'}>
+                      {member.isActive ? 'Attivo' : 'Inattivo'}
+                    </Badge>
+                    {isAdmin && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => openLinkDialog(member)}>
+                          Collega staff
+                        </Button>
+                        {member.staffMemberId && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleUnlinkStaff(member)}
+                            disabled={isSavingLink}
+                          >
+                            Scollega
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Collega membro a staff</DialogTitle>
+            <DialogDescription>
+              Seleziona un membro staff attivo della stessa organizzazione.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="staff-link-select">Membro staff</Label>
+            <select
+              id="staff-link-select"
+              className="w-full border rounded-md px-3 py-2 text-sm"
+              value={selectedStaffMemberId}
+              onChange={(event) => setSelectedStaffMemberId(event.target.value)}
+              disabled={isSavingLink || isLoadingStaff}
+            >
+              <option value="">Seleziona uno staff</option>
+              {staffMembers.map((staff) => (
+                <option key={staff.id} value={staff.id}>
+                  {staff.firstName} {staff.lastName}
+                  {staff.email ? ` - ${staff.email}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsLinkDialogOpen(false)}
+              disabled={isSavingLink}
+            >
+              Annulla
+            </Button>
+            <Button onClick={handleLinkStaff} disabled={isSavingLink || !selectedStaffMemberId}>
+              {isSavingLink ? 'Salvataggio...' : 'Salva collegamento'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Metadata */}
       <Card>

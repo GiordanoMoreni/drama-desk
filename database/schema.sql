@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS organization_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     user_id UUID NOT NULL, -- Supabase Auth user ID
+    staff_member_id UUID,
     role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'teacher', 'staff')),
     is_active BOOLEAN DEFAULT true,
     invited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -36,6 +37,9 @@ CREATE TABLE IF NOT EXISTS organization_members (
     invited_by UUID REFERENCES organization_members(id),
     UNIQUE(organization_id, user_id)
 );
+
+ALTER TABLE organization_members
+    ADD COLUMN IF NOT EXISTS staff_member_id UUID;
 
 -- Students
 CREATE TABLE IF NOT EXISTS students (
@@ -178,6 +182,25 @@ ALTER TABLE classes
     ADD CONSTRAINT classes_teacher_id_fkey
     FOREIGN KEY (teacher_id) REFERENCES staff_members(id) ON DELETE SET NULL;
 
+-- Ensure organization_members.staff_member_id references staff_members (optional link)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.table_constraints
+        WHERE table_name = 'organization_members'
+          AND constraint_name = 'organization_members_staff_member_id_fkey'
+          AND constraint_type = 'FOREIGN KEY'
+    ) THEN
+        ALTER TABLE organization_members
+            ADD CONSTRAINT organization_members_staff_member_id_fkey
+            FOREIGN KEY (staff_member_id) REFERENCES staff_members(id) ON DELETE SET NULL;
+    END IF;
+EXCEPTION
+    WHEN undefined_table THEN
+        NULL;
+END $$;
+
 -- Roles (Character roles in shows)
 CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -206,6 +229,9 @@ CREATE TABLE IF NOT EXISTS castings (
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_organization_members_org_user ON organization_members(organization_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_organization_members_user ON organization_members(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_organization_members_org_staff_unique
+ON organization_members(organization_id, staff_member_id)
+WHERE staff_member_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_students_org_name ON students(organization_id, last_name, first_name);
 CREATE INDEX IF NOT EXISTS idx_classes_org_teacher ON classes(organization_id, teacher_id);
 CREATE INDEX IF NOT EXISTS idx_classes_org_active ON classes(organization_id, is_active);
@@ -230,6 +256,32 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+CREATE OR REPLACE FUNCTION validate_organization_member_staff_link()
+RETURNS TRIGGER AS $$
+DECLARE
+    staff_org UUID;
+BEGIN
+    IF NEW.staff_member_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    SELECT organization_id
+    INTO staff_org
+    FROM staff_members
+    WHERE id = NEW.staff_member_id;
+
+    IF staff_org IS NULL THEN
+        RAISE EXCEPTION 'staff_member not found';
+    END IF;
+
+    IF staff_org <> NEW.organization_id THEN
+        RAISE EXCEPTION 'staff_member belongs to different organization';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 DROP TRIGGER IF EXISTS update_organizations_updated_at ON organizations;
 DROP TRIGGER IF EXISTS update_students_updated_at ON students;
 DROP TRIGGER IF EXISTS update_classes_updated_at ON classes;
@@ -237,6 +289,7 @@ DROP TRIGGER IF EXISTS update_shows_updated_at ON shows;
 DROP TRIGGER IF EXISTS update_staff_members_updated_at ON staff_members;
 DROP TRIGGER IF EXISTS update_show_staff_assignments_updated_at ON show_staff_assignments;
 DROP TRIGGER IF EXISTS update_roles_updated_at ON roles;
+DROP TRIGGER IF EXISTS validate_organization_member_staff_link_trigger ON organization_members;
 
 CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -245,3 +298,8 @@ CREATE TRIGGER update_shows_updated_at BEFORE UPDATE ON shows FOR EACH ROW EXECU
 CREATE TRIGGER update_staff_members_updated_at BEFORE UPDATE ON staff_members FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_show_staff_assignments_updated_at BEFORE UPDATE ON show_staff_assignments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER validate_organization_member_staff_link_trigger
+    BEFORE INSERT OR UPDATE OF staff_member_id, organization_id
+    ON organization_members
+    FOR EACH ROW
+    EXECUTE FUNCTION validate_organization_member_staff_link();

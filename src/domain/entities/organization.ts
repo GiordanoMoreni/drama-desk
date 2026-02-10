@@ -1,4 +1,4 @@
-import { BaseEntity } from './base';
+import { BaseEntity, StaffRole } from './base';
 
 export interface Organization extends BaseEntity {
   name: string;
@@ -20,6 +20,7 @@ export interface OrganizationMember {
   id: string;
   organizationId: string;
   userId: string;
+  staffMemberId?: string;
   role: 'admin' | 'teacher' | 'staff';
   isActive: boolean;
   invitedAt: Date;
@@ -28,6 +29,9 @@ export interface OrganizationMember {
   firstName?: string;
   lastName?: string;
   email?: string;
+  linkedStaffName?: string;
+  linkedStaffEmail?: string;
+  linkedStaffPrimaryRole?: StaffRole;
 }
 
 export interface CreateOrganizationData {

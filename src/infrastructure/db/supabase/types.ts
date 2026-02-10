@@ -22,6 +22,7 @@ export interface OrganizationMemberRow {
   id: string;
   organization_id: string;
   user_id: string;
+  staff_member_id: string | null;
   role: 'admin' | 'teacher' | 'staff';
   is_active: boolean;
   invited_at: string;
