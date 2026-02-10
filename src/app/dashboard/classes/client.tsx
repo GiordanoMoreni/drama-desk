@@ -183,6 +183,13 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
     return `${days} ${time}`.trim();
   };
 
+  const getTeacherName = (teacherId?: string) => {
+    if (!teacherId) return null;
+    const teacher = teachers.find((item) => item.id === teacherId);
+    if (!teacher) return null;
+    return `${teacher.firstName} ${teacher.lastName}`.trim();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -269,7 +276,10 @@ export function ClassesPageClient({ organizationId }: ClassesPageClientProps) {
                   </TableCell>
                   <TableCell>
                     {classItem.teacherId ? (
-                      <Badge variant="outline">Insegnante assegnato</Badge>
+                      <div className="text-sm">
+                        <div className="font-medium">{getTeacherName(classItem.teacherId) || 'Insegnante non trovato'}</div>
+                        <div className="text-muted-foreground text-xs">Assegnato</div>
+                      </div>
                     ) : (
                       <Badge variant="secondary">Nessun insegnante</Badge>
                     )}

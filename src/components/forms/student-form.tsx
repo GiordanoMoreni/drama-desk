@@ -16,6 +16,8 @@ interface StudentFormProps {
   defaultValues?: Partial<CreateStudentFormData>;
   title?: string;
   description?: string;
+  submitLabel?: string;
+  resetOnSubmit?: boolean;
 }
 
 export function StudentForm({
@@ -23,7 +25,9 @@ export function StudentForm({
   isLoading = false,
   defaultValues,
   title = t('students.addNewStudent'),
-  description = t('students.description')
+  description = t('students.description'),
+  submitLabel = 'Salva studente',
+  resetOnSubmit = true,
 }: StudentFormProps) {
   const {
     register,
@@ -56,7 +60,9 @@ export function StudentForm({
     ) as CreateStudentFormData;
 
     await onSubmit(cleanedData);
-    reset();
+    if (resetOnSubmit) {
+      reset();
+    }
   };
 
   return (
@@ -198,7 +204,7 @@ export function StudentForm({
               Reset
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Student'}
+              {isLoading ? 'Salvataggio...' : submitLabel}
             </Button>
           </div>
         </form>

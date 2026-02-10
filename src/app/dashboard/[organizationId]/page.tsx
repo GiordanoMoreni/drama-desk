@@ -14,6 +14,15 @@ interface DashboardOrgPageProps {
   params: Promise<{ organizationId: string }>;
 }
 
+const ACTIVITY_TYPE_LABELS: Record<string, string> = {
+  student_added: 'Studente aggiunto',
+  class_created: 'Classe creata',
+  show_scheduled: 'Spettacolo programmato',
+  student_enrolled: 'Studente iscritto',
+  role_created: 'Ruolo creato',
+  casting_assigned: 'Casting assegnato',
+};
+
 async function getDashboardData(organizationId: string) {
   try {
     const services = await getServices();
@@ -163,7 +172,7 @@ export default async function DashboardOrgPage({ params }: DashboardOrgPageProps
                       </p>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {activity.type.replace('_', ' ')}
+                      {ACTIVITY_TYPE_LABELS[activity.type] || activity.type}
                     </Badge>
                   </div>
                 ))}

@@ -120,7 +120,7 @@ export class GetDashboardDataUseCase {
         activities.push({
           id: `student-${student.id}`,
           type: 'student_added',
-          title: `Student ${student.firstName} ${student.lastName} was added`,
+          title: `Aggiunto studente: ${student.firstName} ${student.lastName}`,
           timestamp: student.createdAt,
         });
       });
@@ -131,7 +131,7 @@ export class GetDashboardDataUseCase {
         activities.push({
           id: `class-${classData.id}`,
           type: 'class_created',
-          title: `Class "${classData.name}" was created`,
+          title: `Creata classe: "${classData.name}"`,
           timestamp: classData.createdAt,
         });
       });
@@ -142,7 +142,7 @@ export class GetDashboardDataUseCase {
         activities.push({
           id: `show-${show.id}`,
           type: 'show_scheduled',
-          title: `Show "${show.title}" was scheduled`,
+          title: `Programmato spettacolo: "${show.title}"`,
           timestamp: show.createdAt,
         });
       });
