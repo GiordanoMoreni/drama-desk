@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,7 @@ export function StaffForm({ initialData, onSubmit, isLoading }: StaffFormProps) 
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors },
   } = useForm({
@@ -41,6 +41,7 @@ export function StaffForm({ initialData, onSubmit, isLoading }: StaffFormProps) 
       ...(isEditing && { isActive: initialData?.isActive ?? true }),
     },
   });
+  const selectedPrimaryRole = useWatch({ control, name: 'primaryRole' });
 
   const submitHandler = async (data: CreateStaffFormData | UpdateStaffFormData) => {
     const cleanedData = {
@@ -94,7 +95,7 @@ export function StaffForm({ initialData, onSubmit, isLoading }: StaffFormProps) 
           <div className="space-y-2">
             <Label htmlFor="primaryRole">Ruolo principale *</Label>
             <Select
-              value={watch('primaryRole') || 'insegnante'}
+              value={selectedPrimaryRole || 'insegnante'}
               onValueChange={(value) => setValue('primaryRole', value as CreateStaffFormData['primaryRole'])}
             >
               <SelectTrigger>

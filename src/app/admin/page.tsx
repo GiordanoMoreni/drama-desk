@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Building2, Users, UserPlus, Activity } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
-import { getAdminServices } from '@/lib/di';
 import { t } from '@/lib/translations';
 
 // Server-side admin dashboard data (avoids using NEXT_PUBLIC_APP_URL)
@@ -15,8 +14,6 @@ async function getAdminDashboardData() {
 
     // For now return the same mock data as the api route; later we can
     // call admin services from `getAdminServices()` to fetch real metrics.
-    const services = await getAdminServices(); // reserved for future use
-
     const dashboardData = {
       totalOrganizations: 5,
       totalUsers: 23,

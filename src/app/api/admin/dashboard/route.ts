@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { getServices } from '@/lib/di';
 
 export async function GET() {
   try {
     // Only allow authenticated users to access admin data
     try {
       await requireAuth();
-    } catch (error) {
+    } catch {
       // If auth fails, return 401 instead of redirecting
       return NextResponse.json(
         { error: 'Unauthorized' },

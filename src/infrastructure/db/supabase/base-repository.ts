@@ -46,8 +46,7 @@ export abstract class BaseSupabaseRepository {
   protected async checkOrganizationAccess(
     table: string,
     id: UUID,
-    organizationId: UUID,
-    userId?: string
+    organizationId: UUID
   ): Promise<boolean> {
     const query = this.supabase
       .from(table)

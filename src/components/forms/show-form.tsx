@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,7 +50,7 @@ export function ShowForm({
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -70,11 +70,13 @@ export function ShowForm({
     },
   });
 
-  const selectedAssignments = (watch('staffAssignments') || []) as Array<{
+  const selectedAssignments = (useWatch({ control, name: 'staffAssignments' }) || []) as Array<{
     staffMemberId: string;
     role: (typeof STAFF_ROLE_OPTIONS)[number]['value'];
     notes?: string;
   }>;
+  const selectedDirectorId = useWatch({ control, name: 'directorId' });
+  const selectedStatus = useWatch({ control, name: 'status' });
 
   const onFormSubmit = async (data: CreateShowFormData | UpdateShowFormData) => {
     await onSubmit(data);
@@ -131,7 +133,7 @@ export function ShowForm({
             <div>
               <Label htmlFor="directorId">{t('shows.director')}</Label>
               <Select
-                value={watch('directorId') || ''}
+                value={selectedDirectorId || ''}
                 onValueChange={(value) => setValue('directorId', value === 'none' ? undefined : value)}
               >
                 <SelectTrigger>
@@ -185,7 +187,7 @@ export function ShowForm({
             {isEditing && (
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select value={watch('status') || ''} onValueChange={(value) => setValue('status', value as UpdateShowFormData['status'])}>
+                <Select value={selectedStatus || ''} onValueChange={(value) => setValue('status', value as UpdateShowFormData['status'])}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

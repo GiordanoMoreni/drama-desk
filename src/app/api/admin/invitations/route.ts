@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { createAdminClient } from '@/infrastructure/db/supabase/server-client';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const user = await requireAuth();
+    await requireAuth();
     
     const supabase = await createAdminClient();
 

@@ -7,7 +7,7 @@ import {
 } from '../../../domain/entities';
 import { OrganizationFilters } from '../../../domain/repositories';
 import { OrganizationRepository } from '../../../domain/repositories';
-import { OrganizationRow, OrganizationMemberRow } from './types';
+import { OrganizationRow } from './types';
 import { BaseSupabaseRepository } from './base-repository';
 
 export class SupabaseOrganizationRepository extends BaseSupabaseRepository implements OrganizationRepository {
@@ -16,6 +16,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   }
 
   async findById(id: string, organizationId?: string): Promise<Organization | null> {
+    void organizationId;
     const { data, error } = await this.supabase
       .from('organizations')
       .select('*')
@@ -31,6 +32,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   }
 
   async findAll(organizationId?: string, filters?: OrganizationFilters, pagination?: any): Promise<any> {
+    void organizationId;
     let query = this.supabase
       .from('organizations')
       .select('*', { count: 'exact' });
@@ -55,6 +57,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   }
 
   async create(data: CreateOrganizationData, organizationId?: string): Promise<Organization> {
+    void organizationId;
     const rowData = this.mapCreateDataToRow(data);
 
     const { data: row, error } = await this.supabase
@@ -71,6 +74,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   }
 
   async update(id: string, data: UpdateOrganizationData, organizationId?: string): Promise<Organization | null> {
+    void organizationId;
     // First check if organization exists
     const exists = await this.checkOrganizationAccess('organizations', id, id);
     if (!exists) return null;
@@ -93,6 +97,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   }
 
   async delete(id: string, organizationId?: string): Promise<boolean> {
+    void organizationId;
     const { error } = await this.supabase
       .from('organizations')
       .delete()
@@ -106,6 +111,7 @@ export class SupabaseOrganizationRepository extends BaseSupabaseRepository imple
   }
 
   async exists(id: string, organizationId?: string): Promise<boolean> {
+    void organizationId;
     return this.checkOrganizationAccess('organizations', id, id);
   }
 

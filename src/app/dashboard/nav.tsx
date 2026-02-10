@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -53,6 +53,7 @@ export default function DashboardNav({
   userOrganizations,
 }: DashboardNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -85,20 +86,20 @@ export default function DashboardNav({
       });
 
       if (response.ok) {
-        window.location.href = '/';
+        window.location.assign('/');
       } else {
         console.error('Failed to sign out');
       }
     } catch (error) {
       console.error('Error signing out:', error);
       // Fallback - redirect anyway
-      window.location.href = '/';
+      window.location.assign('/');
     }
   };
 
   const switchOrganization = (newOrgId: string) => {
     // Navigate to the new organization's dashboard
-    window.location.href = `/dashboard/${newOrgId}`;
+    router.push(`/dashboard/${newOrgId}`);
   };
 
   return (

@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    await requireAuth();
     const { id: organizationId } = await params;
 
     const services = await getServices();
@@ -37,7 +37,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    await requireAuth();
     const { id: organizationId } = await params;
 
     const body: UpdateOrganizationFormData = await request.json();
@@ -86,11 +86,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    await requireAuth();
     const { id: organizationId } = await params;
 
     const services = await getServices();

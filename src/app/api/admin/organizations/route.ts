@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { createAdminClient } from '@/infrastructure/db/supabase/server-client';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const user = await requireAuth();
+    await requireAuth();
     
     // For now, only allow admin users to access this
     // In production, verify user is an actual admin

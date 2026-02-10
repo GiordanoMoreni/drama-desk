@@ -31,7 +31,7 @@ export default function AdminNav() {
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <li key={item.name}>
+              <li key={item.href}>
                 <Link
                   href={item.href}
                   className={cn(

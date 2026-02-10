@@ -6,7 +6,7 @@ import { OrganizationService } from '@/application/services/organization-service
 import { OrganizationPageClient } from './client';
 
 export default async function OrganizationPage() {
-  const { user, organization } = await requireOrganization();
+  const { organization } = await requireOrganization();
 
   // Get organization details
   const organizationRepository = await getOrganizationRepository();

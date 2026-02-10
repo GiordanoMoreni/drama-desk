@@ -1,16 +1,11 @@
-import { requireAuth, getUserOrganizations } from '@/lib/auth';
-import DashboardNav from './nav';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Shield } from 'lucide-react';
+import { requireAuth } from '@/lib/auth';
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireAuth();
-  const userOrganizations = await getUserOrganizations(user.id);
+  await requireAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">

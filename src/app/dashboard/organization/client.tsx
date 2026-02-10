@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Mail, Phone, MapPin, Edit, X, Check, Users } from 'lucide-react';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Building2, Mail, MapPin, Edit, X, Check, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { t } from '@/lib/translations';
 
@@ -67,7 +66,7 @@ export function OrganizationPageClient({ organization, isAdmin }: OrganizationPa
       setIsEditing(false);
       // Refresh della pagina per aggiornare i dati
       window.location.reload();
-    } catch (error) {
+    } catch {
       toast.error('Errore nell\'aggiornamento dell\'organizzazione');
     } finally {
       setIsLoading(false);
