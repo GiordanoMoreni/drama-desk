@@ -148,6 +148,16 @@
   "admin": {
     "title": "Admin Dashboard",
     "adminDashboard": "Pannello Amministrazione",
+    "organizationsNav": "Organizzazioni",
+    "usersNav": "Utenti",
+    "invitationsNav": "Inviti",
+    "settingsNav": "Impostazioni",
+    "adminLabel": "Admin",
+    "by": "da",
+    "status": {
+      "active": "Attivo",
+      "inactive": "Inattivo"
+    },
     "manageOrganizations": "Gestisci organizzazioni, utenti e impostazioni di sistema",
     "totalOrganizations": "Organizzazioni Totali",
     "activeTheatres": "Organizzazioni teatrali attive",
@@ -170,7 +180,58 @@
     "manageUsers": "Gestisci Utenti",
     "viewManageAllUsers": "Visualizza e gestisci tutti gli utenti",
     "manageOrganizationsTitle": "Organizzazioni",
-    "organizationsDescription": "Gestisci le organizzazioni teatrali e le loro impostazioni"
+    "organizationsDescription": "Gestisci le organizzazioni teatrali e le loro impostazioni",
+    "organizationsPage": {
+      "title": "Organizzazioni",
+      "description": "Gestisci le organizzazioni teatrali e le loro impostazioni",
+      "members": "membri",
+      "admins": "admin",
+      "created": "Creata",
+      "noOrganizations": "Nessuna organizzazione",
+      "noOrganizationsDescription": "Crea la tua prima organizzazione teatrale per iniziare",
+      "createNewOrganization": "Crea nuova organizzazione",
+      "createNewOrganizationDescription": "Imposta una nuova organizzazione teatrale per iniziare"
+    },
+    "usersPage": {
+      "title": "Utenti e membri",
+      "description": "Gestisci tutti i membri delle organizzazioni e i loro ruoli",
+      "organizationMembers": "Membri organizzazione",
+      "role": "Ruolo",
+      "joined": "Ingresso",
+      "unknown": "Sconosciuto",
+      "noMembersFound": "Nessun membro trovato"
+    },
+    "invitationsPage": {
+      "title": "Inviti in sospeso",
+      "description": "Gestisci gli inviti ai membri organizzazione in attesa di accettazione",
+      "pendingInvitations": "Inviti in sospeso",
+      "invited": "Invitato",
+      "actions": "Azioni",
+      "pendingUser": "Utente in attesa",
+      "noPendingInvitations": "Nessun invito in sospeso"
+    },
+    "settingsPage": {
+      "unableToLoad": "Impossibile caricare le impostazioni di sistema",
+      "description": "Configura impostazioni e preferenze a livello applicazione",
+      "generalSettings": "Impostazioni generali",
+      "applicationName": "Nome applicazione",
+      "siteUrl": "URL del sito",
+      "applicationDescription": "Descrizione applicazione",
+      "contactCommunication": "Contatti e comunicazione",
+      "adminEmailAddress": "Email amministratore",
+      "emailConfiguration": "Configurazione email",
+      "smtpConfiguration": "Impostazioni SMTP configurate tramite variabili ambiente",
+      "emailInvitations": "Inviti email inviati ai membri organizzazione",
+      "passwordReset": "Email di reset password gestite da Supabase Auth",
+      "systemInformation": "Informazioni di sistema",
+      "environment": "Ambiente",
+      "maintenanceMode": "Modalita manutenzione",
+      "on": "ON",
+      "off": "OFF",
+      "noteLabel": "Nota",
+      "noteText": "Le impostazioni di sistema sono in sola lettura in questa interfaccia. Le modifiche richiedono aggiornamento variabili ambiente o database.",
+      "systemOperational": "Sistema operativo regolare. Tutti i servizi sono attivi."
+    }
   },
   "auth": {
     "login": "Accedi",

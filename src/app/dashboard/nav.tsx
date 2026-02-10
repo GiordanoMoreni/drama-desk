@@ -17,8 +17,27 @@ import {
   User,
   Settings,
   Briefcase,
+  BarChart3,
+  UserPlus,
 } from 'lucide-react';
 import { t } from '@/lib/translations';
+
+type NavIconName =
+  | 'home'
+  | 'users'
+  | 'calendar'
+  | 'theater'
+  | 'briefcase'
+  | 'building'
+  | 'settings'
+  | 'bar_chart_3'
+  | 'user_plus';
+
+export interface NavItem {
+  name: string;
+  href: string;
+  icon: NavIconName;
+}
 
 interface DashboardNavProps {
   organizationName: string;
@@ -31,19 +50,35 @@ interface DashboardNavProps {
     organizationSlug: string;
     userRole: 'admin' | 'teacher' | 'staff';
   }>;
+  navigationItems?: NavItem[];
+  showSidebar?: boolean;
+  homeHref?: string;
+  profileHref?: string;
 }
 
-const getNavigation = (organizationName: string, organizationId?: string) => {
+const getDefaultNavigation = (organizationId?: string): NavItem[] => {
   const baseHref = organizationId ? `/dashboard/${organizationId}` : '/dashboard';
   return [
-    { name: t('dashboard.title'), href: baseHref, icon: Home },
-    { name: t('students.title'), href: `${baseHref}/students`, icon: Users },
-    { name: t('classes.title'), href: `${baseHref}/classes`, icon: Calendar },
-    { name: t('shows.title'), href: `${baseHref}/shows`, icon: Theater },
-    { name: t('staff.title'), href: `${baseHref}/staff`, icon: Briefcase },
-    { name: t('organizations.title'), href: `${baseHref}/organization`, icon: Building },
+    { name: t('dashboard.title'), href: baseHref, icon: 'home' },
+    { name: t('students.title'), href: `${baseHref}/students`, icon: 'users' },
+    { name: t('classes.title'), href: `${baseHref}/classes`, icon: 'calendar' },
+    { name: t('shows.title'), href: `${baseHref}/shows`, icon: 'theater' },
+    { name: t('staff.title'), href: `${baseHref}/staff`, icon: 'briefcase' },
+    { name: t('organizations.title'), href: `${baseHref}/organization`, icon: 'building' },
   ];
 };
+
+const navIconMap = {
+  home: Home,
+  users: Users,
+  calendar: Calendar,
+  theater: Theater,
+  briefcase: Briefcase,
+  building: Building,
+  settings: Settings,
+  bar_chart_3: BarChart3,
+  user_plus: UserPlus,
+} as const;
 
 export default function DashboardNav({
   organizationName,
@@ -51,12 +86,17 @@ export default function DashboardNav({
   userEmail,
   userRole,
   userOrganizations,
+  navigationItems,
+  showSidebar = true,
+  homeHref = '/dashboard',
+  profileHref = '/dashboard/profile',
 }: DashboardNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const navItems = navigationItems || getDefaultNavigation(organizationId);
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -110,7 +150,7 @@ export default function DashboardNav({
           <div className="flex justify-between items-center h-16 gap-4">
             {/* Logo e Organization Name */}
             <div className="flex items-center gap-4 min-w-0">
-              <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <Link href={homeHref} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                 <Theater className="h-8 w-8 text-blue-600 flex-shrink-0" />
                 <span className="text-xl font-bold text-gray-900 hidden sm:inline">Drama Desk</span>
               </Link>
@@ -169,7 +209,7 @@ export default function DashboardNav({
                   </DropdownMenuItem>
                   <div className="my-1 h-px bg-gray-200" />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/profile" className="cursor-pointer flex items-center gap-2">
+                    <Link href={profileHref} className="cursor-pointer flex items-center gap-2">
                       <Settings className="h-4 w-4" />
                       <span>Il mio profilo</span>
                     </Link>
@@ -188,12 +228,14 @@ export default function DashboardNav({
 
       <div className="flex">
         {/* Sidebar Navigation */}
-        <nav className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:pt-16">
+        {showSidebar && (
+          <nav className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:pt-16">
           <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex-1 px-2 space-y-1">
-                {getNavigation(organizationName, organizationId).map((item) => {
+                {navItems.map((item) => {
                   const isActive = pathname === item.href;
+                  const Icon = navIconMap[item.icon] || Home;
                   return (
                     <Link
                       key={item.name}
@@ -204,7 +246,7 @@ export default function DashboardNav({
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <item.icon
+                      <Icon
                         className={`mr-3 h-5 w-5 flex-shrink-0 ${
                           isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
                         }`}
@@ -216,10 +258,12 @@ export default function DashboardNav({
               </div>
             </div>
           </div>
-        </nav>
+          </nav>
+        )}
 
         {/* Mobile menu button */}
-        <div className="md:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-2">
+        {showSidebar && (
+          <div className="md:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-2">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="flex items-center justify-between w-full"
@@ -227,14 +271,16 @@ export default function DashboardNav({
             <span className="text-sm font-medium">{t('common.next').toLowerCase()}</span>
             <ChevronDown className={`h-4 w-4 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`} />
           </button>
-        </div>
+          </div>
+        )}
 
         {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
+        {showSidebar && isMobileMenuOpen && (
           <div className="md:hidden fixed top-24 left-0 right-0 z-40 bg-white border-b border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {getNavigation(organizationName, organizationId).map((item) => {
+              {navItems.map((item) => {
                 const isActive = pathname === item.href;
+                const Icon = navIconMap[item.icon] || Home;
                 return (
                   <Link
                     key={item.name}
@@ -247,7 +293,7 @@ export default function DashboardNav({
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <div className="flex items-center">
-                      <item.icon className="mr-3 h-5 w-5" />
+                      <Icon className="mr-3 h-5 w-5" />
                       {item.name}
                     </div>
                   </Link>

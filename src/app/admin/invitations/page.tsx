@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { UserPlus, Mail, Building2, Check, X } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
 import { createAdminClient } from '@/infrastructure/db/supabase/server-client';
+import { t } from '@/lib/translations';
 
 interface AdminInvitationRow {
   id: string;
@@ -91,9 +92,9 @@ export default async function AdminInvitationsPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Pending Invitations</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('admin.invitationsPage.title')}</h1>
           <p className="text-gray-600 mt-2">
-            Manage organization member invitations awaiting acceptance
+            {t('admin.invitationsPage.description')}
           </p>
         </div>
       </div>
@@ -101,7 +102,7 @@ export default async function AdminInvitationsPage() {
       {/* Invitations Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Pending Invitations ({invitations.length})</CardTitle>
+          <CardTitle>{t('admin.invitationsPage.pendingInvitations')} ({invitations.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {invitations.length > 0 ? (
@@ -109,12 +110,12 @@ export default async function AdminInvitationsPage() {
               <table className="w-full text-sm">
                 <thead className="border-b bg-gray-50">
                   <tr>
-                    <th className="text-left py-3 px-4 font-semibold">Name</th>
-                    <th className="text-left py-3 px-4 font-semibold">Email</th>
-                    <th className="text-left py-3 px-4 font-semibold">Organization</th>
-                    <th className="text-left py-3 px-4 font-semibold">Role</th>
-                    <th className="text-left py-3 px-4 font-semibold">Invited</th>
-                    <th className="text-center py-3 px-4 font-semibold">Actions</th>
+                    <th className="text-left py-3 px-4 font-semibold">{t('students.firstName')}</th>
+                    <th className="text-left py-3 px-4 font-semibold">{t('auth.email')}</th>
+                    <th className="text-left py-3 px-4 font-semibold">{t('organizations.title')}</th>
+                    <th className="text-left py-3 px-4 font-semibold">{t('admin.usersPage.role')}</th>
+                    <th className="text-left py-3 px-4 font-semibold">{t('admin.invitationsPage.invited')}</th>
+                    <th className="text-center py-3 px-4 font-semibold">{t('admin.invitationsPage.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,7 +129,7 @@ export default async function AdminInvitationsPage() {
                           <div className="font-medium text-gray-900">
                             {profile.first_name && profile.last_name
                               ? `${profile.first_name} ${profile.last_name}`
-                              : 'Pending User'}
+                              : t('admin.invitationsPage.pendingUser')}
                           </div>
                         </td>
                         <td className="py-3 px-4">
@@ -140,7 +141,7 @@ export default async function AdminInvitationsPage() {
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-gray-400" />
-                            {org.name || 'Unknown'}
+                            {org.name || t('admin.usersPage.unknown')}
                           </div>
                         </td>
                         <td className="py-3 px-4">
@@ -170,7 +171,7 @@ export default async function AdminInvitationsPage() {
           ) : (
             <div className="text-center py-8">
               <UserPlus className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No pending invitations</p>
+              <p className="text-gray-500">{t('admin.invitationsPage.noPendingInvitations')}</p>
             </div>
           )}
         </CardContent>
